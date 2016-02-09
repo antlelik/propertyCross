@@ -1,12 +1,17 @@
 $(document).ready(function () {
-    var searchBtn = $('.btn-send');
-    var page = 1;
-    var place = 'leeds';
+    var searchBtn = $('.btn-send'),
+        page = 1,
+        searchIteration = 0,
+        errorField = $('.search-problem'),
+        resultField = $('.result-container');
 
 
     searchBtn.on('click', function (e) {
+
         e.preventDefault();
-        sendData(page, place);
+        errorField.addClass('hidden');
+        resultField.addClass('hidden');
+        sendData(page, $('#search').val());
     });
 
     function sendData(page, place) {
@@ -24,10 +29,27 @@ $(document).ready(function () {
             }
         })
             .success(function (response) {
+                var resp = response.response;
+                var statusCode = parseInt(resp.status_code);
+                var respCode = parseInt(resp.application_response_code);
+                var locationItems;
+
+                if (respCode < 200) {
+                    searchIteration++;
+                    resultField.removeClass('hidden');
+                    locationItems = resp.total_results;
+                    resultField.append('<p>Search#' + searchIteration + ' (' + locationItems + ')</p>');
+                }
+                if (respCode === 201 || respCode === 202) {
+
+                }
+                if (statusCode >= 300 || respCode > 202) {
+                    errorField.removeClass('hidden');
+                }
                 console.log(response)
             })
             .fail(function (error) {
-                console.log(error)
+                console.log(error);
             });
     }
 });
