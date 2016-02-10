@@ -1,17 +1,22 @@
 $(document).ready(function () {
-    var searchBtn = $('.btn-send'),
-        page = 1,
-        searchIteration = 0,
-        errorField = $('.search-problem'),
-        resultField = $('.result-container');
-
+    var searchBtn         = $('.btn-send'),
+        page              = 1,
+        searchInputField  = $('#search'),
+        errorHolder       = $('.search-problem'),
+        resultHolder      = $('.result-container'),
+        resultListField   = $('.recent-list'),
+        locationHolder    = $('.locations'),
+        locationListField = $('.location-list'),
+        overlay           = $('.overlay');
 
     searchBtn.on('click', function (e) {
-
         e.preventDefault();
-        errorField.addClass('hidden');
-        resultField.addClass('hidden');
-        sendData(page, $('#search').val());
+
+        hideBlock(errorHolder);
+        hideBlock(resultHolder);
+        hideBlock(locationHolder);
+        showBlock(overlay);
+        sendData(page, searchInputField.val());
     });
 
     function sendData(page, place) {
@@ -29,27 +34,70 @@ $(document).ready(function () {
             }
         })
             .success(function (response) {
-                var resp = response.response;
-                var statusCode = parseInt(resp.status_code);
-                var respCode = parseInt(resp.application_response_code);
-                var locationItems;
+                var resp             = response.response,
+                    statusCode       = parseInt(resp.status_code),
+                    appRespCode      = parseInt(resp.application_response_code),
+                    locationItemsArr = resp.locations || [],
+                    locationItemsTotalResults;
 
-                if (respCode < 200) {
-                    searchIteration++;
-                    resultField.removeClass('hidden');
-                    locationItems = resp.total_results;
-                    resultField.append('<p>Search#' + searchIteration + ' (' + locationItems + ')</p>');
+                if (appRespCode < 200) {
+                    locationItemsTotalResults = resp.total_results || 0;
+                    showBlock(resultHolder);
+                    resultListField.prepend('<p>' + locationItemsArr[0]['long_title'] + ' (' + locationItemsTotalResults + ')</p>');
                 }
-                if (respCode === 201 || respCode === 202) {
 
+                if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
+                    createLocationsList(locationItemsArr);
                 }
-                if (statusCode >= 300 || respCode > 202) {
-                    errorField.removeClass('hidden');
+
+                if (statusCode >= 300 || appRespCode > 202) {
+                    errorHolder.removeClass('hidden');
                 }
-                console.log(response)
+
+                console.log(response);
+                cleanField(searchInputField);
+                hideBlock(overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
+    }
+
+    function createLocationsList(locationItemsArr) {
+        if (!locationItemsArr.length) {
+            showBlock(errorHolder);
+            return;
+        }
+
+        locationItemsArr.forEach(function (el) {
+            locationListField.append('<p><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></p>');
+        });
+
+        locationListField.off('click', 'span', getLocationsFromSeveral);
+        locationListField.on('click', 'span', getLocationsFromSeveral);
+        showBlock(locationHolder);
+    }
+
+    function getLocationsFromSeveral() {
+        searchInputField.val($(this).data('name'));
+        hideBlock(locationHolder);
+        cleanBlock(locationListField);
+        searchBtn.click();
+    }
+
+    function cleanField($field) {
+        $field.val('');
+    }
+
+    function cleanBlock($block) {
+        $block.html('');
+    }
+
+    function hideBlock($block) {
+        $block.addClass('hidden');
+    }
+
+    function showBlock($block) {
+        $block.removeClass('hidden');
     }
 });
