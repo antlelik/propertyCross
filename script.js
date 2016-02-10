@@ -3,6 +3,7 @@ $(document).ready(function () {
         page              = 1,
         searchInputField  = $('#search'),
         errorHolder       = $('.search-problem'),
+        errorMessageField = errorHolder.find('.error-message'),
         resultHolder      = $('.result-container'),
         resultListField   = $('.recent-list'),
         locationHolder    = $('.locations'),
@@ -38,19 +39,21 @@ $(document).ready(function () {
                     statusCode       = parseInt(resp.status_code),
                     appRespCode      = parseInt(resp.application_response_code),
                     locationItemsArr = resp.locations || [],
-                    locationItemsTotalResults;
+                    locationItemsTotalResults,
+                    responseText = resp.application_response_text;
 
                 if (appRespCode < 200) {
                     locationItemsTotalResults = resp.total_results || 0;
                     showBlock(resultHolder);
-                    resultListField.prepend('<p>' + locationItemsArr[0]['long_title'] + ' (' + locationItemsTotalResults + ')</p>');
+                    resultListField.prepend('<li>' + locationItemsArr[0]['long_title'] + ' (' + locationItemsTotalResults + ')</li>');
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
-                    createLocationsList(locationItemsArr);
+                    createLocationsList(locationItemsArr, responseText);
                 }
 
                 if (statusCode >= 300 || appRespCode > 202) {
+                    showErrorMessage(responseText);
                     errorHolder.removeClass('hidden');
                 }
 
@@ -63,14 +66,15 @@ $(document).ready(function () {
             });
     }
 
-    function createLocationsList(locationItemsArr) {
+    function createLocationsList(locationItemsArr, responseText) {
         if (!locationItemsArr.length) {
+            showErrorMessage(responseText);
             showBlock(errorHolder);
             return;
         }
 
         locationItemsArr.forEach(function (el) {
-            locationListField.append('<p><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></p>');
+            locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
         });
 
         locationListField.off('click', 'span', getLocationsFromSeveral);
@@ -99,5 +103,13 @@ $(document).ready(function () {
 
     function showBlock($block) {
         $block.removeClass('hidden');
+    }
+
+    function showErrorMessage(responseText) {
+        var text = ' "Empty search field"';
+        if (searchInputField.val().length) {
+            text = ' "' + searchInputField.val() + '"'
+        }
+        errorMessageField.text(responseText + text);
     }
 });
