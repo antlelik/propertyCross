@@ -9,8 +9,24 @@ h1 {
     padding: 10px 0 20px;
 }
 
-
-
+.location-items {
+    overflow: auto;
+    max-height: 600px;
+}
+.location-item {
+    overflow: hidden;
+    margin: 0 0 20px;
+}
+.location-item .item-number {
+    margin-right: 10px;
+}
+.location-item h2 {
+    margin: 0 0 10px;
+}
+.location-item .img-preview {
+    max-width: 160px;
+    height: auto;
+}
 .overlay {
     position: fixed;
     z-index: 100;
