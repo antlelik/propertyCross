@@ -93,12 +93,16 @@ $(document).ready(function () {
         getLocation(page, place)
             .success(function (response) {
                 var response = response.response,
-                    itemsArr = response.listings;
+                    itemsArr = response.listings,
+                    location;
+                if (response.locations && response.locations.length) {
+                    location = response.locations[0]["long_title"]
+                }
                 console.log(response);
                 showBlock(overlay);
                 removeLocations();
                 removePagination();
-                addPagination(response.page, response.total_pages, response.locations[0]["long_title"]);
+                addPagination(response.page, response.total_pages, location);
                 addLocations(itemsArr, response.page);
                 showBlock(locationItemsList);
                 showBlock(locationPagination);
@@ -114,6 +118,9 @@ $(document).ready(function () {
             paging,
             pagingStructure;
 
+        if (!totalPages) {
+            return;
+        }
         if (totalPages > 50) {
             totalPages = 50;
         }
@@ -198,6 +205,9 @@ $(document).ready(function () {
 
     function addLocations(itemsArr, currentPage) {
         var current = parseInt(currentPage);
+        if (!itemsArr || !itemsArr.length) {
+            return;
+        }
         itemsArr.forEach(function (el, ind) {
             var item = '<div class="location-item media">' +
                 '<div class="media-left">' +
