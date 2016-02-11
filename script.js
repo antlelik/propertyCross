@@ -1,16 +1,18 @@
 $(document).ready(function () {
-    var searchBtn         = $('.btn-send'),
-        locationBtn       = $('.btn-location'),
-        page              = 1,
-        locationItemsList = $('.location-items'),
-        searchInputField  = $('#search'),
-        errorHolder       = $('.search-problem'),
-        errorMessageField = errorHolder.find('.error-message'),
-        resultHolder      = $('.result-container'),
-        resultListField   = $('.recent-list'),
-        locationHolder    = $('.locations'),
-        locationListField = $('.location-list'),
-        overlay           = $('.overlay');
+    var searchBtn          = $('.btn-send'),
+        locationBtn        = $('.btn-location'),
+        page               = 1,
+        locationItemsList  = $('.location-items'),
+        locationPagination = $('.location-pagination'),
+        searchInputField   = $('#search'),
+        errorHolder        = $('.search-problem'),
+        errorMessageField  = errorHolder.find('.error-message'),
+        resultHolder       = $('.result-container'),
+        resultListField    = $('.recent-list'),
+        locationHolder     = $('.locations'),
+        locationListField  = $('.location-list'),
+        overlay            = $('.overlay'),
+        itemsPerPage       = 20;
 
     searchBtn.on('click', function (e) {
         e.preventDefault();
@@ -74,37 +76,132 @@ $(document).ready(function () {
     }
 
     function createLocationList(locationItemsArr, locationItemsTotalResults) {
-        var locationItem = $('<li><span data-name="' + locationItemsArr[0]['long_title'] + '">' +
-            locationItemsArr[0]['long_title'] +
-            ' (' + locationItemsTotalResults + ')</span></li>');
+        var place        = locationItemsArr[0]['long_title'],
+            locationItem = $('<li><span data-name="' + place + '">' +
+                place +
+                ' (' + locationItemsTotalResults + ')</span></li>');
         showBlock(resultHolder);
         resultListField.prepend(locationItem);
-        locationItem.on('click', showLocationItems);
-
-        function showLocationItems() {
-            var place = $(this).find('span').data('name');
-
-            getLocation(page, place)
-                .success(function (response) {
-                    var response = response.response;
-                    var itemsArr = response.listings;
-                    console.log(response);
-                    removeLocations();
-                    locationItemsList.append('<p>Pages ' + response.total_pages + '</p>');
-                    addLocations(itemsArr);
-                    showBlock(locationItemsList);
-                })
-                .fail(function (error) {
-                    console.log(error);
-                });
-        }
+        locationItem.on('click', 'span', function () {
+            showLocationItems(place);
+        });
     }
 
-    function addLocations(itemsArr) {
+    function showLocationItems(place, page) {
+        var page = page || 1;
+
+        getLocation(page, place)
+            .success(function (response) {
+                var response = response.response,
+                    itemsArr = response.listings;
+                console.log(response);
+                showBlock(overlay);
+                removeLocations();
+                removePagination();
+                addPagination(response.page, response.total_pages, response.locations[0]["long_title"]);
+                addLocations(itemsArr, response.page);
+                showBlock(locationItemsList);
+                showBlock(locationPagination);
+                hideBlock(overlay);
+            })
+            .fail(function (error) {
+                console.log(error);
+            });
+    }
+
+    function addPagination(currentPage, totalPages, placeName) {
+        var current = parseInt(currentPage),
+            paging,
+            pagingStructure;
+
+        if (totalPages > 50) {
+            totalPages = 50;
+        }
+
+        if (current < 5) {
+            pagingStructure = '' +
+                generatePaginationItems(1, 5, current) +
+                '<li class="disabled"><a href="#">...</a></li>' +
+                '<li><a href="#">' + totalPages + '</a></li>';
+        } else if (current > parseInt(totalPages) - 5) {
+            pagingStructure = '<li><a href="#">1</a></li>' +
+                '<li class="disabled"><a href="#">...</a></li>' +
+                generatePaginationItems(totalPages - 5, totalPages, current) +
+                '';
+        } else {
+            pagingStructure = '<li><a href="#">1</a></li>' +
+                '<li class="disabled"><a href="#">...</a></li>' +
+                generatePaginationItems(current - 2, current - 1) +
+                '<li class="active"><a href="#">' + currentPage + '</a></li>' +
+                generatePaginationItems(current + 1, current + 2) +
+                '<li class="disabled"><a href="#">...</a></li>' +
+                '<li><a href="#">' + totalPages + '</a></li>';
+        }
+
+        paging = createPaginationStructure(pagingStructure);
+        addPaginationEvents(paging, placeName);
+        locationPagination.html(paging);
+    }
+
+    function createPaginationStructure(pagingStructure) {
+        return $('<ul class="pagination">' +
+            '<li>' +
+            '<a class="prev" href="#" aria-label="Previous">' +
+            '<span aria-hidden="true">&laquo;</span>' +
+            '</a>' +
+            '</li>' +
+            pagingStructure +
+            '<li>' +
+            '<a class="next" href="#" aria-label="Next">' +
+            '<span aria-hidden="true">&raquo;</span>' +
+            '</a>' +
+            '</li>' +
+            '</ul>')
+    }
+
+    function addPaginationEvents(paging, placeName) {
+        paging.on('click', 'a', function (e) {
+            e.preventDefault();
+            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
+            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
+            var pageNum   = parseInt($(this).text());
+            if ($(this).hasClass('prev') && activeNum !== 1) {
+                showLocationItems(placeName, activeNum - 1)
+            }
+
+            if ($(this).hasClass('next') && activeNum !== lastNum) {
+                showLocationItems(placeName, activeNum + 1)
+            }
+
+            if (pageNum > 0) {
+                showLocationItems(placeName, pageNum);
+            }
+
+        });
+    }
+
+    function generatePaginationItems(min, max, current) {
+        var pagingRepeat = '';
+        for (var i = min; i <= max; i++) {
+            if (current && current === i) {
+                pagingRepeat += '<li class="active"><a href="#">' + i + '</a></li>'
+            } else {
+                pagingRepeat += '<li><a href="#">' + i + '</a></li>'
+            }
+        }
+        return pagingRepeat;
+    }
+
+    function removePagination() {
+        locationPagination.html('');
+    }
+
+    function addLocations(itemsArr, currentPage) {
+        var current = parseInt(currentPage);
         itemsArr.forEach(function (el, ind) {
             var item = '<div class="location-item media">' +
                 '<div class="media-left">' +
-                '<span class="item-number label label-info">' + (ind + 1) + '</span>' +
+                '<span class="item-number label label-info">' + ((itemsPerPage * (current - 1)) + ind + 1)  + '</span>' +
                 '<img class="img-preview" src="' + el.img_url + '" />' +
                 '</div>' +
                 '<div class="media-body">' +

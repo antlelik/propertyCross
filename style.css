@@ -8,7 +8,9 @@ h1 {
 .title-block {
     padding: 10px 0 20px;
 }
-
+.recent-list span {
+    cursor: pointer;
+}
 .location-items {
     overflow: auto;
     max-height: 600px;
