@@ -29,6 +29,15 @@ h1 {
     max-width: 160px;
     height: auto;
 }
+
+.modal-visual {
+    overflow: hidden;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+
+
 .overlay {
     position: fixed;
     z-index: 100;

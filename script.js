@@ -12,6 +12,7 @@ $(document).ready(function () {
         locationHolder     = $('.locations'),
         locationListField  = $('.location-list'),
         overlay            = $('.overlay'),
+        modalHolder        = $('.modal-holder'),
         itemsPerPage       = 20;
 
     searchBtn.on('click', function (e) {
@@ -103,6 +104,7 @@ $(document).ready(function () {
                 removeLocations();
                 removePagination();
                 addPagination(response.page, response.total_pages, location);
+                cleanBlock(modalHolder);
                 addLocations(itemsArr, response.page);
                 showBlock(locationItemsList);
                 showBlock(locationPagination);
@@ -209,9 +211,12 @@ $(document).ready(function () {
             return;
         }
         itemsArr.forEach(function (el, ind) {
-            var item = '<div class="location-item media">' +
+            var currentInd = (itemsPerPage * (current - 1)) + ind + 1,
+                item;
+
+            item = '<div class="location-item media">' +
                 '<div class="media-left">' +
-                '<span class="item-number label label-info">' + ((itemsPerPage * (current - 1)) + ind + 1)  + '</span>' +
+                '<span class="item-number label label-info">' + currentInd + '</span>' +
                 '<img class="img-preview" src="' + el.img_url + '" />' +
                 '</div>' +
                 '<div class="media-body">' +
@@ -222,10 +227,12 @@ $(document).ready(function () {
                 '<p>Summary: ' + el.summary + '</p>' +
                 '<p>Keywords: ' + el.keywords + '</p>' +
                 '<p>Updated: ' + el.updated_in_days_formatted + '</p>' +
+                '<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-' + currentInd + '">Show Info</button>' +
                 '</div>' +
                 '</div>';
 
             locationItemsList.append(item);
+            modalHolder.append(createModal(el, currentInd));
         });
     }
 
@@ -285,5 +292,47 @@ $(document).ready(function () {
         hideBlock(resultHolder);
         hideBlock(locationHolder);
         showBlock(overlay);
+    }
+
+    function createModal(itemsData, ind) {
+        return '<div class="modal fade" id="modal-' + ind + '" tabindex="-1" role="dialog" aria-labelledby="modal-label-' + ind + '">' +
+            '<div class="modal-dialog" role="document">' +
+            '  <div class="modal-content">' +
+            '    <div class="modal-header">' +
+            '      <button type="button" class="close" data-dismiss="modal" data-backdrop="false" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '      <h3 class="modal-title" id="modal-label-' + ind + '">' + itemsData.title + '</h3>' +
+            '      <h4><span class="price label label-primary">' + itemsData.price_formatted + '</span></h4>' +
+            '      <span class="property-type glyphicon glyphicon-home" aria-hidden="true"> ' + itemsData.property_type + '</span>' +
+            '    </div>' +
+            '    <div class="modal-body">' +
+            '      <img class="modal-visual" src="' + itemsData.img_url + '" />' +
+            '      <ul class="properties">' +
+            '      ' + createModalProperty(itemsData.bathroom_number, 'Bathroom') +
+            '      ' + createModalProperty(itemsData.bedroom_number, 'Bedroom') +
+            '      ' + createModalProperty(itemsData.car_spaces, 'Car space') +
+            '      </ul>' +
+            '      <p><strong>Summary:</strong> ' + itemsData.summary + '</p>' +
+            '      <p><strong>Updated:</strong> ' + itemsData.updated_in_days_formatted + '</p>' +
+            '    </div>' +
+            '    <div class="modal-footer">' +
+            '      <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>' +
+            '    </div>' +
+            '  </div>' +
+            '</div>' +
+            '</div>';
+    }
+
+    function createModalProperty(prop, propName) {
+        var propStr = '';
+        if (prop) {
+            var count = parseInt(prop);
+            if (count > 1) {
+                propName = propName + 's';
+            }
+            propStr = '<li>' +
+                count + ' ' + propName +
+                '</li>';
+        }
+        return propStr;
     }
 });
