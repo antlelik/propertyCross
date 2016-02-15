@@ -3,26 +3,26 @@ $(document).ready(function () {
 });
 
 var propertyCross = {
-    init: function() {
-        this.searchBtn         = $('.btn-send');
-        this.locationBtn       = $('.btn-location');
-        this.page              = 1;
-        this.locationItemsList = $('.location-items');
-        this.locationPagination= $('.location-pagination');
-        this.searchInputField  = $('#search');
-        this.errorHolder       = $('.search-problem');
-        this.errorMessageField = this.errorHolder.find('.error-message');
-        this.resultHolder      = $('.result-container');
-        this.resultListField   = $('.recent-list');
-        this.locationHolder    = $('.locations');
-        this.locationListField = $('.location-list');
-        this.overlay           = $('.overlay');
-        this.modalHolder       = $('.modal-holder');
-        this.itemsPerPage      = 20;
+    init: function () {
+        this.searchBtn          = $('.btn-send');
+        this.locationBtn        = $('.btn-location');
+        this.page               = 1;
+        this.locationItemsList  = $('.location-items');
+        this.locationPagination = $('.location-pagination');
+        this.searchInputField   = $('#search');
+        this.errorHolder        = $('.search-problem');
+        this.errorMessageField  = this.errorHolder.find('.error-message');
+        this.resultHolder       = $('.result-container');
+        this.resultListField    = $('.recent-list');
+        this.locationHolder     = $('.locations');
+        this.locationListField  = $('.location-list');
+        this.overlay            = $('.overlay');
+        this.modalHolder        = $('.modal-holder');
+        this.itemsPerPage       = 20;
 
         this.bindEvents();
     },
-    bindEvents: function() {
+    bindEvents: function () {
         this.searchBtn.on('click', function (e) {
             e.preventDefault();
             this.setInitialStatesToSearch();
@@ -36,6 +36,7 @@ var propertyCross = {
         }.bind(this));
     },
     getLocation: function (page, place) {
+        console.log(place)
         return $.ajax({
             method: "GET",
             url: "http://api.nestoria.co.uk/api",
@@ -85,14 +86,19 @@ var propertyCross = {
     },
     createLocationList: function (locationItemsArr, locationItemsTotalResults) {
         var place        = locationItemsArr[0]['long_title'],
-            locationItem = $('<li><span data-name="' + place + '">' +
-                place +
-                ' (' + locationItemsTotalResults + ')</span></li>');
+            locationItem = $('<li><span data-name="' + place + '">' + place + ' (' + locationItemsTotalResults + ')</span></li>'),
+            equalItems;
+
+        equalItems = this.resultListField.find('li span').filter(function (ind, el) {
+            return $(el).text().indexOf(locationItemsArr[0]['long_title']) > -1
+        });
+        if (!equalItems.length) {
+            this.resultListField.prepend(locationItem);
+            locationItem.on('click', 'span', function () {
+                this.showLocationItems(place);
+            }.bind(this));
+        }
         this.showBlock(this.resultHolder);
-        this.resultListField.prepend(locationItem);
-        locationItem.on('click', 'span', function () {
-            this.showLocationItems(place);
-        }.bind(this));
     },
     showLocationItems: function (place, page) {
         var page = page || 1,
@@ -133,24 +139,29 @@ var propertyCross = {
             totalPages = 50;
         }
 
-        if (current < 5) {
-            pagingStructure = '' +
-                this.generatePaginationItems(1, 5, current) +
-                '<li class="disabled"><a href="#">...</a></li>' +
-                '<li><a href="#">' + totalPages + '</a></li>';
-        } else if (current > parseInt(totalPages) - 5) {
-            pagingStructure = '<li><a href="#">1</a></li>' +
-                '<li class="disabled"><a href="#">...</a></li>' +
-                this.generatePaginationItems(totalPages - 5, totalPages, current) +
-                '';
+        if (totalPages <= 5) {
+            pagingStructure = this.generatePaginationItems(1, totalPages, current);
+            paging = this.createPaginationStructure(pagingStructure);
         } else {
-            pagingStructure = '<li><a href="#">1</a></li>' +
-                '<li class="disabled"><a href="#">...</a></li>' +
-                this.generatePaginationItems(current - 2, current - 1) +
-                '<li class="active"><a href="#">' + currentPage + '</a></li>' +
-                this.generatePaginationItems(current + 1, current + 2) +
-                '<li class="disabled"><a href="#">...</a></li>' +
-                '<li><a href="#">' + totalPages + '</a></li>';
+            if (current < 5) {
+                pagingStructure = '' +
+                    this.generatePaginationItems(1, 5, current) +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    '<li><a href="#">' + totalPages + '</a></li>';
+            } else if (current > parseInt(totalPages) - 5) {
+                pagingStructure = '<li><a href="#">1</a></li>' +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    this.generatePaginationItems(totalPages - 5, totalPages, current) +
+                    '';
+            } else {
+                pagingStructure = '<li><a href="#">1</a></li>' +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    this.generatePaginationItems(current - 2, current - 1) +
+                    '<li class="active"><a href="#">' + currentPage + '</a></li>' +
+                    this.generatePaginationItems(current + 1, current + 2) +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    '<li><a href="#">' + totalPages + '</a></li>';
+            }
         }
 
         paging = this.createPaginationStructure(pagingStructure);
@@ -160,15 +171,15 @@ var propertyCross = {
     createPaginationStructure: function (pagingStructure) {
         return $('<ul class="pagination">' +
             '<li>' +
-            '<a class="prev" href="#" aria-label="Previous">' +
-            '<span aria-hidden="true">&laquo;</span>' +
-            '</a>' +
+              '<a class="prev" href="#" aria-label="Previous">' +
+                '<span aria-hidden="true">&laquo;</span>' +
+              '</a>' +
             '</li>' +
             pagingStructure +
             '<li>' +
-            '<a class="next" href="#" aria-label="Next">' +
-            '<span aria-hidden="true">&raquo;</span>' +
-            '</a>' +
+              '<a class="next" href="#" aria-label="Next">' +
+                '<span aria-hidden="true">&raquo;</span>' +
+              '</a>' +
             '</li>' +
             '</ul>')
     },
@@ -209,7 +220,7 @@ var propertyCross = {
     },
     addLocations: function (itemsArr, currentPage) {
         var current = parseInt(currentPage),
-            self = this;
+            self    = this;
         if (!itemsArr || !itemsArr.length) {
             return;
         }
@@ -242,6 +253,7 @@ var propertyCross = {
         this.locationItemsList.html('');
     },
     createSelectLocationList: function (locationItemsArr, responseText) {
+        var self = this;
         if (!locationItemsArr.length) {
             this.showErrorMessage(responseText);
             this.showBlock(this.errorHolder);
@@ -252,12 +264,16 @@ var propertyCross = {
             this.locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
         }.bind(this));
 
-        this.locationListField.off('click', 'span', this.getLocationsFromSeveral.bind(this));
-        this.locationListField.on('click', 'span', this.getLocationsFromSeveral.bind(this));
+        this.locationListField.off('click', 'span', function() {
+            self.getLocationsFromSeveral(this);
+        });
+        this.locationListField.on('click', 'span', function() {
+            self.getLocationsFromSeveral(this);
+        });
         this.showBlock(this.locationHolder);
     },
-    getLocationsFromSeveral: function () {
-        this.searchInputField.val($(this).data('name'));
+    getLocationsFromSeveral: function (elem) {
+        this.searchInputField.val($(elem).data('name'));
         this.hideBlock(this.locationHolder);
         this.cleanBlock(this.locationListField);
         this.searchBtn.click();
