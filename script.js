@@ -1,33 +1,41 @@
 $(document).ready(function () {
-    var searchBtn          = $('.btn-send'),
-        locationBtn        = $('.btn-location'),
-        page               = 1,
-        locationItemsList  = $('.location-items'),
-        locationPagination = $('.location-pagination'),
-        searchInputField   = $('#search'),
-        errorHolder        = $('.search-problem'),
-        errorMessageField  = errorHolder.find('.error-message'),
-        resultHolder       = $('.result-container'),
-        resultListField    = $('.recent-list'),
-        locationHolder     = $('.locations'),
-        locationListField  = $('.location-list'),
-        overlay            = $('.overlay'),
-        modalHolder        = $('.modal-holder'),
-        itemsPerPage       = 20;
+    propertyCross.init();
+});
 
-    searchBtn.on('click', function (e) {
-        e.preventDefault();
-        setInitialStatesToSearch();
-        sendSearchData(page, searchInputField.val());
-    });
+var propertyCross = {
+    init: function() {
+        this.searchBtn         = $('.btn-send');
+        this.locationBtn       = $('.btn-location');
+        this.page              = 1;
+        this.locationItemsList = $('.location-items');
+        this.locationPagination= $('.location-pagination');
+        this.searchInputField  = $('#search');
+        this.errorHolder       = $('.search-problem');
+        this.errorMessageField = this.errorHolder.find('.error-message');
+        this.resultHolder      = $('.result-container');
+        this.resultListField   = $('.recent-list');
+        this.locationHolder    = $('.locations');
+        this.locationListField = $('.location-list');
+        this.overlay           = $('.overlay');
+        this.modalHolder       = $('.modal-holder');
+        this.itemsPerPage      = 20;
 
-    locationBtn.on('click', function (e) {
-        e.preventDefault();
-        setInitialStatesToSearch();
-        sendSearchData(page, locationBtn.data('name'));
-    });
+        this.bindEvents();
+    },
+    bindEvents: function() {
+        this.searchBtn.on('click', function (e) {
+            e.preventDefault();
+            this.setInitialStatesToSearch();
+            this.sendSearchData(this.page, this.searchInputField.val());
+        }.bind(this));
 
-    function getLocation(page, place) {
+        this.locationBtn.on('click', function (e) {
+            e.preventDefault();
+            this.setInitialStatesToSearch();
+            this.sendSearchData(this.page, this.locationBtn.data('name'));
+        }.bind(this));
+    },
+    getLocation: function (page, place) {
         return $.ajax({
             method: "GET",
             url: "http://api.nestoria.co.uk/api",
@@ -41,10 +49,10 @@ $(document).ready(function () {
                 place_name: place
             }
         });
-    }
-
-    function sendSearchData(page, place) {
-        getLocation(page, place)
+    },
+    sendSearchData: function (page, place) {
+        var self = this;
+        this.getLocation(page, place)
             .success(function (response) {
                 var resp             = response.response,
                     statusCode       = parseInt(resp.status_code),
@@ -55,43 +63,42 @@ $(document).ready(function () {
 
                 if (appRespCode < 200) {
                     locationItemsTotalResults = resp.total_results || 0;
-                    createLocationList(locationItemsArr, locationItemsTotalResults)
+                    self.createLocationList(locationItemsArr, locationItemsTotalResults)
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
-                    createSelectLocationList(locationItemsArr, responseText);
+                    self.createSelectLocationList(locationItemsArr, responseText);
                 }
 
                 if (statusCode >= 300 || appRespCode > 202) {
-                    showErrorMessage(responseText);
-                    errorHolder.removeClass('hidden');
+                    self.showErrorMessage(responseText);
+                    self.errorHolder.removeClass('hidden');
                 }
 
                 console.log(response);
-                cleanField(searchInputField);
-                hideBlock(overlay);
+                self.cleanField(self.searchInputField);
+                self.hideBlock(self.overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
-    }
-
-    function createLocationList(locationItemsArr, locationItemsTotalResults) {
+    },
+    createLocationList: function (locationItemsArr, locationItemsTotalResults) {
         var place        = locationItemsArr[0]['long_title'],
             locationItem = $('<li><span data-name="' + place + '">' +
                 place +
                 ' (' + locationItemsTotalResults + ')</span></li>');
-        showBlock(resultHolder);
-        resultListField.prepend(locationItem);
+        this.showBlock(this.resultHolder);
+        this.resultListField.prepend(locationItem);
         locationItem.on('click', 'span', function () {
-            showLocationItems(place);
-        });
-    }
+            this.showLocationItems(place);
+        }.bind(this));
+    },
+    showLocationItems: function (place, page) {
+        var page = page || 1,
+            self = this;
 
-    function showLocationItems(place, page) {
-        var page = page || 1;
-
-        getLocation(page, place)
+        this.getLocation(page, place)
             .success(function (response) {
                 var response = response.response,
                     itemsArr = response.listings,
@@ -100,22 +107,21 @@ $(document).ready(function () {
                     location = response.locations[0]["long_title"]
                 }
                 console.log(response);
-                showBlock(overlay);
-                removeLocations();
-                removePagination();
-                addPagination(response.page, response.total_pages, location);
-                cleanBlock(modalHolder);
-                addLocations(itemsArr, response.page);
-                showBlock(locationItemsList);
-                showBlock(locationPagination);
-                hideBlock(overlay);
+                self.showBlock(self.overlay);
+                self.removeLocations();
+                self.removePagination();
+                self.addPagination(response.page, response.total_pages, location);
+                self.cleanBlock(self.modalHolder);
+                self.addLocations(itemsArr, response.page);
+                self.showBlock(self.locationItemsList);
+                self.showBlock(self.locationPagination);
+                self.hideBlock(self.overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
-    }
-
-    function addPagination(currentPage, totalPages, placeName) {
+    },
+    addPagination: function (currentPage, totalPages, placeName) {
         var current = parseInt(currentPage),
             paging,
             pagingStructure;
@@ -129,30 +135,29 @@ $(document).ready(function () {
 
         if (current < 5) {
             pagingStructure = '' +
-                generatePaginationItems(1, 5, current) +
+                this.generatePaginationItems(1, 5, current) +
                 '<li class="disabled"><a href="#">...</a></li>' +
                 '<li><a href="#">' + totalPages + '</a></li>';
         } else if (current > parseInt(totalPages) - 5) {
             pagingStructure = '<li><a href="#">1</a></li>' +
                 '<li class="disabled"><a href="#">...</a></li>' +
-                generatePaginationItems(totalPages - 5, totalPages, current) +
+                this.generatePaginationItems(totalPages - 5, totalPages, current) +
                 '';
         } else {
             pagingStructure = '<li><a href="#">1</a></li>' +
                 '<li class="disabled"><a href="#">...</a></li>' +
-                generatePaginationItems(current - 2, current - 1) +
+                this.generatePaginationItems(current - 2, current - 1) +
                 '<li class="active"><a href="#">' + currentPage + '</a></li>' +
-                generatePaginationItems(current + 1, current + 2) +
+                this.generatePaginationItems(current + 1, current + 2) +
                 '<li class="disabled"><a href="#">...</a></li>' +
                 '<li><a href="#">' + totalPages + '</a></li>';
         }
 
-        paging = createPaginationStructure(pagingStructure);
-        addPaginationEvents(paging, placeName);
-        locationPagination.html(paging);
-    }
-
-    function createPaginationStructure(pagingStructure) {
+        paging = this.createPaginationStructure(pagingStructure);
+        this.addPaginationEvents(paging, placeName);
+        this.locationPagination.html(paging);
+    },
+    createPaginationStructure: function (pagingStructure) {
         return $('<ul class="pagination">' +
             '<li>' +
             '<a class="prev" href="#" aria-label="Previous">' +
@@ -166,30 +171,29 @@ $(document).ready(function () {
             '</a>' +
             '</li>' +
             '</ul>')
-    }
-
-    function addPaginationEvents(paging, placeName) {
+    },
+    addPaginationEvents: function (paging, placeName) {
+        var self = this;
         paging.on('click', 'a', function (e) {
             e.preventDefault();
-            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
-            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
+            var activeNum = parseInt(self.locationPagination.find('.active').find('a').text());
+            var lastNum   = parseInt(self.locationPagination.find('li').eq(-2).find('a').text());
             var pageNum   = parseInt($(this).text());
             if ($(this).hasClass('prev') && activeNum !== 1) {
-                showLocationItems(placeName, activeNum - 1)
+                self.showLocationItems(placeName, activeNum - 1)
             }
 
             if ($(this).hasClass('next') && activeNum !== lastNum) {
-                showLocationItems(placeName, activeNum + 1)
+                self.showLocationItems(placeName, activeNum + 1)
             }
 
             if (pageNum > 0) {
-                showLocationItems(placeName, pageNum);
+                self.showLocationItems(placeName, pageNum);
             }
 
         });
-    }
-
-    function generatePaginationItems(min, max, current) {
+    },
+    generatePaginationItems: function (min, max, current) {
         var pagingRepeat = '';
         for (var i = min; i <= max; i++) {
             if (current && current === i) {
@@ -199,19 +203,18 @@ $(document).ready(function () {
             }
         }
         return pagingRepeat;
-    }
-
-    function removePagination() {
-        locationPagination.html('');
-    }
-
-    function addLocations(itemsArr, currentPage) {
-        var current = parseInt(currentPage);
+    },
+    removePagination: function () {
+        this.locationPagination.html('');
+    },
+    addLocations: function (itemsArr, currentPage) {
+        var current = parseInt(currentPage),
+            self = this;
         if (!itemsArr || !itemsArr.length) {
             return;
         }
         itemsArr.forEach(function (el, ind) {
-            var currentInd = (itemsPerPage * (current - 1)) + ind + 1,
+            var currentInd = (self.itemsPerPage * (current - 1)) + ind + 1,
                 item;
 
             item = '<div class="location-item media">' +
@@ -231,70 +234,62 @@ $(document).ready(function () {
                 '</div>' +
                 '</div>';
 
-            locationItemsList.append(item);
-            modalHolder.append(createModal(el, currentInd));
+            self.locationItemsList.append(item);
+            self.modalHolder.append(self.createModal(el, currentInd));
         });
-    }
-
-    function removeLocations() {
-        locationItemsList.html('');
-    }
-
-    function createSelectLocationList(locationItemsArr, responseText) {
+    },
+    removeLocations: function () {
+        this.locationItemsList.html('');
+    },
+    createSelectLocationList: function (locationItemsArr, responseText) {
         if (!locationItemsArr.length) {
-            showErrorMessage(responseText);
-            showBlock(errorHolder);
+            this.showErrorMessage(responseText);
+            this.showBlock(this.errorHolder);
             return;
         }
 
         locationItemsArr.forEach(function (el) {
-            locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
-        });
+            this.locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
+        }.bind(this));
 
-        locationListField.off('click', 'span', getLocationsFromSeveral);
-        locationListField.on('click', 'span', getLocationsFromSeveral);
-        showBlock(locationHolder);
-    }
-
-    function getLocationsFromSeveral() {
-        searchInputField.val($(this).data('name'));
-        hideBlock(locationHolder);
-        cleanBlock(locationListField);
-        searchBtn.click();
-    }
-
-    function cleanField($field) {
+        this.locationListField.off('click', 'span', this.getLocationsFromSeveral.bind(this));
+        this.locationListField.on('click', 'span', this.getLocationsFromSeveral.bind(this));
+        this.showBlock(this.locationHolder);
+    },
+    getLocationsFromSeveral: function () {
+        this.searchInputField.val($(this).data('name'));
+        this.hideBlock(this.locationHolder);
+        this.cleanBlock(this.locationListField);
+        this.searchBtn.click();
+    },
+    cleanField: function ($field) {
         $field.val('');
-    }
-
-    function cleanBlock($block) {
+    },
+    cleanBlock: function ($block) {
         $block.html('');
-    }
-
-    function hideBlock($block) {
+    },
+    hideBlock: function hideBlock($block) {
         $block.addClass('hidden');
-    }
-
-    function showBlock($block) {
+    },
+    showBlock: function ($block) {
         $block.removeClass('hidden');
-    }
-
-    function showErrorMessage(responseText) {
+    },
+    showErrorMessage: function (responseText) {
         var text = ' "Empty search field"';
-        if (searchInputField.val().length) {
-            text = ' "' + searchInputField.val() + '"'
+        if (this.searchInputField.val().length) {
+            text = ' "' + this.searchInputField.val() + '"'
         }
-        errorMessageField.text(responseText + text);
-    }
-
-    function setInitialStatesToSearch() {
-        hideBlock(errorHolder);
-        hideBlock(resultHolder);
-        hideBlock(locationHolder);
-        showBlock(overlay);
-    }
-
-    function createModal(itemsData, ind) {
+        this.errorMessageField.text(responseText + text);
+    },
+    setInitialStatesToSearch: function () {
+        this.hideBlock(this.errorHolder);
+        this.hideBlock(this.resultHolder);
+        this.hideBlock(this.locationHolder);
+        this.showBlock(this.overlay);
+        this.cleanBlock(this.locationItemsList);
+        this.cleanBlock(this.locationPagination);
+    },
+    createModal: function (itemsData, ind) {
         return '<div class="modal fade" id="modal-' + ind + '" tabindex="-1" role="dialog" aria-labelledby="modal-label-' + ind + '">' +
             '<div class="modal-dialog" role="document">' +
             '  <div class="modal-content">' +
@@ -307,9 +302,9 @@ $(document).ready(function () {
             '    <div class="modal-body">' +
             '      <img class="modal-visual" src="' + itemsData.img_url + '" />' +
             '      <ul class="properties">' +
-            '      ' + createModalProperty(itemsData.bathroom_number, 'Bathroom') +
-            '      ' + createModalProperty(itemsData.bedroom_number, 'Bedroom') +
-            '      ' + createModalProperty(itemsData.car_spaces, 'Car space') +
+            '      ' + this.createModalProperty(itemsData.bathroom_number, 'Bathroom') +
+            '      ' + this.createModalProperty(itemsData.bedroom_number, 'Bedroom') +
+            '      ' + this.createModalProperty(itemsData.car_spaces, 'Car space') +
             '      </ul>' +
             '      <p><strong>Summary:</strong> ' + itemsData.summary + '</p>' +
             '      <p><strong>Updated:</strong> ' + itemsData.updated_in_days_formatted + '</p>' +
@@ -320,9 +315,8 @@ $(document).ready(function () {
             '  </div>' +
             '</div>' +
             '</div>';
-    }
-
-    function createModalProperty(prop, propName) {
+    },
+    createModalProperty: function (prop, propName) {
         var propStr = '';
         if (prop) {
             var count = parseInt(prop);
@@ -335,4 +329,4 @@ $(document).ready(function () {
         }
         return propStr;
     }
-});
+};
