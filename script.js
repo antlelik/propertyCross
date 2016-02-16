@@ -36,7 +36,6 @@ var propertyCross = {
         }.bind(this));
     },
     getLocation: function (page, place) {
-        console.log(place)
         return $.ajax({
             method: "GET",
             url: "http://api.nestoria.co.uk/api",
@@ -139,7 +138,7 @@ var propertyCross = {
             totalPages = 50;
         }
 
-        if (totalPages <= 5) {
+        if (totalPages <= 7) {
             pagingStructure = this.generatePaginationItems(1, totalPages, current);
             paging = this.createPaginationStructure(pagingStructure);
         } else {
