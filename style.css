@@ -29,14 +29,15 @@ h1 {
     max-width: 160px;
     height: auto;
 }
+.btn-favourites {
+    margin: 0 0 0 3px;
+}
 
 .modal-visual {
     overflow: hidden;
     display: block;
     margin: 0 auto 20px;
 }
-
-
 
 .overlay {
     position: fixed;

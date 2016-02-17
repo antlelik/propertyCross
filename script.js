@@ -61,11 +61,13 @@ var propertyCross = {
         this.locationListField  = $('.location-list');
         this.overlay            = $('.overlay');
         this.modalHolder        = $('.modal-holder');
+        this.favourites         = '.btn-favourites';
         this.itemsPerPage       = 20;
 
         this.bindEvents();
     },
     bindEvents: function () {
+        var self = this;
         this.searchBtn.on('click', function (e) {
             e.preventDefault();
             this.setInitialStatesToSearch();
@@ -77,11 +79,30 @@ var propertyCross = {
             this.setInitialStatesToSearch();
             this.sendSearchData(this.page, this.countryList[this.countrySelect.val()].myLocation);
         }.bind(this));
+
+        $('body').on('click', this.favourites, function (e) {
+            e.preventDefault();
+            var id   = $(this).parents('.location-item').data('id'),
+                list = JSON.parse(localStorage.getItem('favourites')) || [];
+
+            $(this).find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
+
+            if (!list.length) {
+                localStorage.setItem('favourites', JSON.stringify([{id: id}]));
+                return;
+            }
+
+            if (self.hasLocalStorageId(list, id)) {
+                self.removeLocalStorageId(list, id)
+            } else {
+                self.addLocalStorageId(list, id);
+            }
+        })
     },
     getLocation: function (page, place) {
         var countryItem = this.countrySelect.val(),
-            country = this.countryList[countryItem].country,
-            url     = this.countryList[countryItem].url;
+            country     = this.countryList[countryItem].country,
+            url         = this.countryList[countryItem].url;
 
         return $.ajax({
             method: "GET",
@@ -153,7 +174,6 @@ var propertyCross = {
         this.getLocation(page, place)
             .success(function (response) {
                 var response = response.response,
-                    itemsArr = response.listings,
                     location;
                 if (response.locations && response.locations.length) {
                     location = response.locations[0]["long_title"]
@@ -164,7 +184,7 @@ var propertyCross = {
                 self.removePagination();
                 self.addPagination(response.page, response.total_pages, location);
                 self.cleanBlock(self.modalHolder);
-                self.addLocations(itemsArr, response.page);
+                self.addLocations(response, location);
                 self.showBlock(self.locationItemsList);
                 self.showBlock(self.locationPagination);
                 self.hideBlock(self.overlay);
@@ -264,17 +284,19 @@ var propertyCross = {
     removePagination: function () {
         this.locationPagination.html('');
     },
-    addLocations: function (itemsArr, currentPage) {
-        var current = parseInt(currentPage),
-            self    = this;
+    addLocations: function (response, currentLocation) {
+        var current  = parseInt(response.page),
+            itemsArr = response.listings,
+            self     = this;
         if (!itemsArr || !itemsArr.length) {
             return;
         }
         itemsArr.forEach(function (el, ind) {
             var currentInd = (self.itemsPerPage * (current - 1)) + ind + 1,
+                storageId = currentLocation + '-' + currentInd,
                 item;
 
-            item = '<div class="location-item media">' +
+            item = '<div class="location-item media" data-id="' + storageId + '">' +
                 '<div class="media-left">' +
                 '<span class="item-number label label-info">' + currentInd + '</span>' +
                 '<img class="img-preview" src="' + el.img_url + '" />' +
@@ -287,13 +309,26 @@ var propertyCross = {
                 '<p>Summary: ' + el.summary + '</p>' +
                 '<p>Keywords: ' + el.keywords + '</p>' +
                 '<p>Updated: ' + el.updated_in_days_formatted + '</p>' +
-                '<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-' + currentInd + '">Show Info</button>' +
+                '<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modal-' + currentInd + '">Show Info</button>' +
+                '<button type="button" class="btn btn-sm btn-primary btn-favourites"><i class="glyphicon ' + self.createFavouriteBtnClass(storageId) + '"></i></button>' +
                 '</div>' +
                 '</div>';
 
             self.locationItemsList.append(item);
             self.modalHolder.append(self.createModal(el, currentInd));
         });
+    },
+    createFavouriteBtnClass: function (id) {
+        var list = JSON.parse(localStorage.getItem('favourites')),
+            className = 'glyphicon-heart-empty';
+        if (list) {
+            list.forEach(function(el){
+                if(el.id === id) {
+                    className = 'glyphicon-heart';
+                }
+            });
+        }
+        return className;
     },
     removeLocations: function () {
         this.locationItemsList.html('');
@@ -390,5 +425,20 @@ var propertyCross = {
                 '</li>';
         }
         return propStr;
+    },
+    hasLocalStorageId: function (list, id) {
+        return list.some(function (el) {
+            return el.id === id
+        });
+    },
+    removeLocalStorageId: function (list, id) {
+        list = list.filter(function (el) {
+            return el.id !== id
+        });
+        localStorage.setItem('favourites', JSON.stringify(list));
+    },
+    addLocalStorageId: function (list, id) {
+        list.push({id: id});
+        localStorage.setItem('favourites', JSON.stringify(list));
     }
 };
