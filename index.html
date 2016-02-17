@@ -11,6 +11,10 @@
 
 <div class="container">
     <div class="row center-block title-block">
+        <button type="button" class="btn btn-primary pull-right btn-sm btn-show-favourites" data-toggle="modal" data-target="#favourites">
+            <i class="glyphicon glyphicon-list"></i>
+            Favourites
+        </button>
         <h1>PropertyCross</h1>
     </div>
     <div class="row center-block">
@@ -61,6 +65,20 @@
         <div class="location-pagination hidden"></div>
         <div class="location-items hidden"></div>
         <div class="modal-holder"></div>
+        <div class="modal fade" id="favourites" tabindex="-1" role="dialog" aria-labelledby="favouritesLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h3 class="modal-title" id="favouritesLabel">Favourites</h3>
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div class="overlay hidden">

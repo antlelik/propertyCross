@@ -46,23 +46,26 @@ var propertyCross = {
         }
     },
     init: function () {
-        this.searchBtn          = $('.btn-send');
-        this.locationBtn        = $('.btn-location');
-        this.page               = 1;
-        this.locationItemsList  = $('.location-items');
-        this.countrySelect      = $('#country-location');
-        this.locationPagination = $('.location-pagination');
-        this.searchInputField   = $('#search');
-        this.errorHolder        = $('.search-problem');
-        this.errorMessageField  = this.errorHolder.find('.error-message');
-        this.resultHolder       = $('.result-container');
-        this.resultListField    = $('.recent-list');
-        this.locationHolder     = $('.locations');
-        this.locationListField  = $('.location-list');
-        this.overlay            = $('.overlay');
-        this.modalHolder        = $('.modal-holder');
-        this.favourites         = '.btn-favourites';
-        this.itemsPerPage       = 20;
+        this.searchBtn           = $('.btn-send');
+        this.locationBtn         = $('.btn-location');
+        this.page                = 1;
+        this.locationItemsList   = $('.location-items');
+        this.countrySelect       = $('#country-location');
+        this.locationPagination  = $('.location-pagination');
+        this.searchInputField    = $('#search');
+        this.errorHolder         = $('.search-problem');
+        this.errorMessageField   = this.errorHolder.find('.error-message');
+        this.resultHolder        = $('.result-container');
+        this.resultListField     = $('.recent-list');
+        this.locationHolder      = $('.locations');
+        this.locationListField   = $('.location-list');
+        this.overlay             = $('.overlay');
+        this.modalHolder         = $('.modal-holder');
+        this.favouritesModal     = $('#favourites');
+        this.showFavourites      = $('.btn-show-favourites');
+        this.favouritesBtn       = '.btn-favourites';
+        this.removeFavouritesBtn = '.btn-remove';
+        this.itemsPerPage        = 20;
 
         this.bindEvents();
     },
@@ -80,24 +83,45 @@ var propertyCross = {
             this.sendSearchData(this.page, this.countryList[this.countrySelect.val()].myLocation);
         }.bind(this));
 
-        $('body').on('click', this.favourites, function (e) {
+        $('body').on('click', this.favouritesBtn, function (e) {
             e.preventDefault();
-            var id   = $(this).parents('.location-item').data('id'),
-                list = JSON.parse(localStorage.getItem('favourites')) || [];
+            var holder = $(this).parents('.location-item'),
+                id     = holder.data('id'),
+                name   = holder.data('name'),
+                img    = holder.data('img'),
+                price  = holder.data('price'),
+                list   = JSON.parse(localStorage.getItem('favourites')) || [];
 
             $(this).find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
 
-            if (!list.length) {
-                localStorage.setItem('favourites', JSON.stringify([{id: id}]));
-                return;
-            }
-
-            if (self.hasLocalStorageId(list, id)) {
-                self.removeLocalStorageId(list, id)
+            if (!list.length || !self.hasLocalStorageId(list, id)) {
+                self.addLocalStorageId(list, id, name, img, price);
             } else {
-                self.addLocalStorageId(list, id);
+                self.removeLocalStorageId(list, id)
             }
-        })
+        });
+
+        this.showFavourites.on('click', function (e) {
+            e.preventDefault();
+            if (localStorage.favourites && JSON.parse(localStorage.getItem('favourites')).length) {
+                self.createFavouritesList();
+            } else {
+                self.resetFavouritesList();
+            }
+        });
+
+        $('body').on('click', this.removeFavouritesBtn, function () {
+            var parentHolder = $(this).parents('.favourite-item'),
+                id           = parentHolder.data('id'),
+                list         = JSON.parse(localStorage.getItem('favourites')) || [];
+            self.removeLocalStorageId(list, id);
+            parentHolder.remove();
+            $('[data-id=' + id +']').find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
+
+            if (!JSON.parse(localStorage.getItem('favourites')).length) {
+                self.favouritesModal.find('.close').click();
+            }
+        });
     },
     getLocation: function (page, place) {
         var countryItem = this.countrySelect.val(),
@@ -293,10 +317,10 @@ var propertyCross = {
         }
         itemsArr.forEach(function (el, ind) {
             var currentInd = (self.itemsPerPage * (current - 1)) + ind + 1,
-                storageId = currentLocation + '-' + currentInd,
+                storageId  = currentLocation + '-' + currentInd,
                 item;
 
-            item = '<div class="location-item media" data-id="' + storageId + '">' +
+            item = '<div class="location-item media" data-id="' + storageId + '" data-name="' + el.title + '" data-img="' + el.img_url + '" data-price="' + el.price_formatted + '">' +
                 '<div class="media-left">' +
                 '<span class="item-number label label-info">' + currentInd + '</span>' +
                 '<img class="img-preview" src="' + el.img_url + '" />' +
@@ -319,11 +343,11 @@ var propertyCross = {
         });
     },
     createFavouriteBtnClass: function (id) {
-        var list = JSON.parse(localStorage.getItem('favourites')),
+        var list      = JSON.parse(localStorage.getItem('favourites')),
             className = 'glyphicon-heart-empty';
         if (list) {
-            list.forEach(function(el){
-                if(el.id === id) {
+            list.forEach(function (el) {
+                if (el.item.id === id) {
                     className = 'glyphicon-heart';
                 }
             });
@@ -428,17 +452,46 @@ var propertyCross = {
     },
     hasLocalStorageId: function (list, id) {
         return list.some(function (el) {
-            return el.id === id
+            return el.item.id === id
         });
     },
     removeLocalStorageId: function (list, id) {
         list = list.filter(function (el) {
-            return el.id !== id
+            return el.item.id !== id
         });
         localStorage.setItem('favourites', JSON.stringify(list));
     },
-    addLocalStorageId: function (list, id) {
-        list.push({id: id});
+    addLocalStorageId: function (list, id, name, img, price) {
+        var currentItemObj = {item: {id: id, name: name, img: img, price: price}};
+        list.push(currentItemObj);
         localStorage.setItem('favourites', JSON.stringify(list));
+    },
+    createFavouritesList: function () {
+        var modalBody = this.favouritesModal.find('.modal-body'),
+            storageArr,
+            template  = '';
+
+        if (!localStorage.favourites) {
+            return;
+        }
+        storageArr = JSON.parse(localStorage.favourites);
+
+        storageArr.forEach(function (el) {
+            template += '<div class="media favourite-item" data-id="' + el.item.id + '">' +
+                '<div class="media-left">' +
+                '<img src="' + el.item.img + '" />' +
+                '</div>' +
+                '<div class="media-body">' +
+                '<h3 class="media-heading">' + el.item.name + '</h3>' +
+                '<span class="label label-default">' + el.item.price + '</span>' +
+                '<span class="glyphicon glyphicon-remove btn-remove"></span>' +
+                '</div>' +
+                '</div>';
+        });
+        modalBody.html('<div class="favourites-list">' + template + '</div>');
+    },
+    resetFavouritesList: function () {
+        var modalBody = this.favouritesModal.find('.modal-body');
+        modalBody.html('<p>You have not added any properties to your favourites</p>');
     }
 };

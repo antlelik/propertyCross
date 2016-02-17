@@ -32,7 +32,18 @@ h1 {
 .btn-favourites {
     margin: 0 0 0 3px;
 }
-
+.favourites-list .favourite-item {
+    position: relative;
+}
+.favourites-list .favourite-item img{
+    max-width: 100px;
+}
+.favourites-list .favourite-item .btn-remove {
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    cursor: pointer;
+}
 .modal-visual {
     overflow: hidden;
     display: block;
