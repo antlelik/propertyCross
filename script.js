@@ -3,11 +3,54 @@ $(document).ready(function () {
 });
 
 var propertyCross = {
+    countryList: {
+        'UK': {
+            country: 'uk',
+            url: 'http://api.nestoria.co.uk/api',
+            myLocation: 'Wolverhampton'
+        },
+        'Deutschland': {
+            country: 'de',
+            url: 'http://api.nestoria.de/api',
+            myLocation: 'Köln'
+        },
+        'Italia': {
+            country: 'it',
+            url: 'http://api.nestoria.it/api',
+            myLocation: 'Genova'
+        },
+        'España': {
+            country: 'es',
+            url: 'http://api.nestoria.es/api',
+            myLocation: 'Valencia'
+        },
+        'France': {
+            country: 'fr',
+            url: 'http://api.nestoria.fr/api',
+            myLocation: 'Lion'
+        },
+        'India': {
+            country: 'in',
+            url: 'http://api.nestoria.in/api',
+            myLocation: 'Surat'
+        },
+        'México': {
+            country: 'mx',
+            url: 'http://api.nestoria.mx/api',
+            myLocation: 'León'
+        },
+        'Brasil': {
+            country: 'br',
+            url: 'http://api.nestoria.com.br/api',
+            myLocation: 'Manaus'
+        }
+    },
     init: function () {
         this.searchBtn          = $('.btn-send');
         this.locationBtn        = $('.btn-location');
         this.page               = 1;
         this.locationItemsList  = $('.location-items');
+        this.countrySelect      = $('#country-location');
         this.locationPagination = $('.location-pagination');
         this.searchInputField   = $('#search');
         this.errorHolder        = $('.search-problem');
@@ -32,15 +75,19 @@ var propertyCross = {
         this.locationBtn.on('click', function (e) {
             e.preventDefault();
             this.setInitialStatesToSearch();
-            this.sendSearchData(this.page, this.locationBtn.data('name'));
+            this.sendSearchData(this.page, this.countryList[this.countrySelect.val()].myLocation);
         }.bind(this));
     },
     getLocation: function (page, place) {
+        var countryItem = this.countrySelect.val(),
+            country = this.countryList[countryItem].country,
+            url     = this.countryList[countryItem].url;
+
         return $.ajax({
             method: "GET",
-            url: "http://api.nestoria.co.uk/api",
+            url: url,
             data: {
-                country: 'uk',
+                country: country,
                 pretty: 1,
                 action: 'search_listings',
                 encoding: 'json',
@@ -140,7 +187,7 @@ var propertyCross = {
 
         if (totalPages <= 7) {
             pagingStructure = this.generatePaginationItems(1, totalPages, current);
-            paging = this.createPaginationStructure(pagingStructure);
+            paging          = this.createPaginationStructure(pagingStructure);
         } else {
             if (current < 5) {
                 pagingStructure = '' +
@@ -170,15 +217,15 @@ var propertyCross = {
     createPaginationStructure: function (pagingStructure) {
         return $('<ul class="pagination">' +
             '<li>' +
-              '<a class="prev" href="#" aria-label="Previous">' +
-                '<span aria-hidden="true">&laquo;</span>' +
-              '</a>' +
+            '<a class="prev" href="#" aria-label="Previous">' +
+            '<span aria-hidden="true">&laquo;</span>' +
+            '</a>' +
             '</li>' +
             pagingStructure +
             '<li>' +
-              '<a class="next" href="#" aria-label="Next">' +
-                '<span aria-hidden="true">&raquo;</span>' +
-              '</a>' +
+            '<a class="next" href="#" aria-label="Next">' +
+            '<span aria-hidden="true">&raquo;</span>' +
+            '</a>' +
             '</li>' +
             '</ul>')
     },
@@ -263,10 +310,10 @@ var propertyCross = {
             this.locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
         }.bind(this));
 
-        this.locationListField.off('click', 'span', function() {
+        this.locationListField.off('click', 'span', function () {
             self.getLocationsFromSeveral(this);
         });
-        this.locationListField.on('click', 'span', function() {
+        this.locationListField.on('click', 'span', function () {
             self.getLocationsFromSeveral(this);
         });
         this.showBlock(this.locationHolder);
