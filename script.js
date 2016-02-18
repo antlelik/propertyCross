@@ -71,13 +71,13 @@ var propertyCross = (function () {
         searchBtn.on('click', function (e) {
             e.preventDefault();
             setInitialStatesToSearch();
-            sendSearchData(page, searchInputField.val());
+            sendSearchData(page, {name: searchInputField.val()});
         });
 
         locationBtn.on('click', function (e) {
             e.preventDefault();
             setInitialStatesToSearch();
-            sendSearchData(page, countryList[countrySelect.val()].myLocation);
+            getCurrentLocation()
         });
 
         body.on('click', favouritesBtn, function (e) {
@@ -121,7 +121,21 @@ var propertyCross = (function () {
         });
     }
 
-    function getLocation(page, place) {
+    function getCurrentLocation() {
+        navigator.geolocation.getCurrentPosition(successFunction, errorFunction);
+        function successFunction(position) {
+            var currentLocation = {};
+            currentLocation.lat = position.coords.latitude;
+            currentLocation.lng = position.coords.longitude;
+            sendSearchData(page, {position: '?centre_point=' + currentLocation.lat + ',' + currentLocation.lng + ',' + '10km'});
+        }
+
+        function errorFunction() {
+            errorMessageField.text('Couldn\'t get your current position');
+        }
+    }
+
+    function getLocationByName(page, place) {
         var countryItem = countrySelect.val(),
             country     = countryList[countryItem].country,
             url         = countryList[countryItem].url;
@@ -141,8 +155,32 @@ var propertyCross = (function () {
         });
     }
 
-    function sendSearchData(page, place) {
-        getLocation(page, place)
+    function getLocationByMap(page, position) {
+        var countryItem = countrySelect.val(),
+            url         = countryList[countryItem].url;
+
+        url += position;
+        return $.ajax({
+            method: "GET",
+            url: url,
+            data: {
+                pretty: 1,
+                action: 'search_listings',
+                encoding: 'json',
+                listing_type: 'buy',
+                page: page
+            }
+        });
+    }
+
+    function sendSearchData(page, data) {
+        var getLocation;
+        if (data.name) {
+            getLocation = getLocationByName(page, data.name);
+        } else {
+            getLocation = getLocationByMap(page, data.position);
+        }
+        getLocation
             .success(function (response) {
                 var resp             = response.response,
                     statusCode       = parseInt(resp.status_code),
@@ -160,7 +198,12 @@ var propertyCross = (function () {
                     createSelectLocationList(locationItemsArr, responseText);
                 }
 
-                if (statusCode >= 300 || appRespCode > 202) {
+                if (statusCode >= 200 && appRespCode === 210) {
+                    showErrorMessage(null, 'Sorry, no available items in your location');
+                    errorHolder.removeClass('hidden');
+                }
+
+                if (statusCode >= 300 || appRespCode > 210) {
                     showErrorMessage(responseText);
                     errorHolder.removeClass('hidden');
                 }
@@ -175,12 +218,12 @@ var propertyCross = (function () {
     }
 
     function createLocationList(locationItemsArr, locationItemsTotalResults) {
-        var place        = locationItemsArr[0]['long_title'],
+        var place        = locationItemsArr[0]['place_name'],
             locationItem = $('<li><span data-name="' + place + '">' + place + ' (' + locationItemsTotalResults + ')</span></li>'),
             equalItems;
 
         equalItems = resultListField.find('li span').filter(function (ind, el) {
-            return $(el).text().indexOf(locationItemsArr[0]['long_title']) > -1
+            return $(el).text().indexOf(locationItemsArr[0]['place_name']) > -1
         });
         if (!equalItems.length) {
             resultListField.prepend(locationItem);
@@ -194,12 +237,12 @@ var propertyCross = (function () {
     function showLocationItems(place, page) {
         var page = page || 1;
 
-        getLocation(page, place)
+        getLocationByName(page, place)
             .success(function (response) {
                 var response = response.response,
                     location;
                 if (response.locations && response.locations.length) {
-                    location = response.locations[0]["long_title"]
+                    location = response.locations[0]["place_name"]
                 }
                 console.log(response);
                 showBlock(overlay);
@@ -372,7 +415,7 @@ var propertyCross = (function () {
         }
 
         locationItemsArr.forEach(function (el) {
-            locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
+            locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['place_name'] + '</span></li>');
         });
 
         locationListField.off('click', 'span', function () {
@@ -407,8 +450,14 @@ var propertyCross = (function () {
         $block.removeClass('hidden');
     }
 
-    function showErrorMessage(responseText) {
-        var text = ' "Empty search field"';
+    function showErrorMessage(responseText, messageText) {
+        var text;
+        if (messageText) {
+            errorMessageField.text(messageText);
+            return;
+        }
+
+        text = ' "Empty search field"';
         if (searchInputField.val().length) {
             text = ' "' + searchInputField.val() + '"'
         }
