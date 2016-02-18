@@ -228,6 +228,7 @@ var propertyCross = (function () {
         if (!equalItems.length) {
             resultListField.prepend(locationItem);
             locationItem.on('click', 'span', function () {
+                showBlock(overlay);
                 showLocationItems(place);
             });
         }
@@ -245,7 +246,6 @@ var propertyCross = (function () {
                     location = response.locations[0]["place_name"]
                 }
                 console.log(response);
-                showBlock(overlay);
                 removeLocations();
                 removePagination();
                 addPagination(response.page, response.total_pages, location);
@@ -321,6 +321,7 @@ var propertyCross = (function () {
     function addPaginationEvents(paging, placeName) {
         paging.on('click', 'a', function (e) {
             e.preventDefault();
+            showBlock(overlay);
             var activeNum = parseInt(locationPagination.find('.active').find('a').text());
             var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
             var pageNum   = parseInt($(this).text());
@@ -335,7 +336,6 @@ var propertyCross = (function () {
             if (pageNum > 0) {
                 showLocationItems(placeName, pageNum);
             }
-
         });
     }
 
