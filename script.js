@@ -175,10 +175,10 @@ var propertyCross = (function () {
 
     function sendSearchData(page, data) {
         var getLocation;
-        if (data.name) {
-            getLocation = getLocationByName(page, data.name);
-        } else {
+        if (data.position) {
             getLocation = getLocationByMap(page, data.position);
+        } else {
+            getLocation = getLocationByName(page, data.name);
         }
         getLocation
             .success(function (response) {
@@ -198,13 +198,13 @@ var propertyCross = (function () {
                     createSelectLocationList(locationItemsArr, responseText);
                 }
 
-                if (statusCode >= 200 && appRespCode === 210) {
-                    showErrorMessage(null, 'Sorry, no available items in your location');
+                if (statusCode === 200 && appRespCode === 210) {
+                    showErrorMessage('Sorry, no available items in your location');
                     errorHolder.removeClass('hidden');
                 }
 
                 if (statusCode >= 300 || appRespCode > 210) {
-                    showErrorMessage(responseText);
+                    showErrorMessage();
                     errorHolder.removeClass('hidden');
                 }
 
@@ -407,9 +407,9 @@ var propertyCross = (function () {
         locationItemsList.html('');
     }
 
-    function createSelectLocationList(locationItemsArr, responseText) {
+    function createSelectLocationList(locationItemsArr) {
         if (!locationItemsArr.length) {
-            showErrorMessage(responseText);
+            showErrorMessage();
             showBlock(errorHolder);
             return;
         }
@@ -450,18 +450,13 @@ var propertyCross = (function () {
         $block.removeClass('hidden');
     }
 
-    function showErrorMessage(responseText, messageText) {
-        var text;
+    function showErrorMessage(messageText) {
+        var text = 'Please type correct city or zip code';
         if (messageText) {
-            errorMessageField.text(messageText);
-            return;
+            text = messageText;
         }
 
-        text = ' "Empty search field"';
-        if (searchInputField.val().length) {
-            text = ' "' + searchInputField.val() + '"'
-        }
-        errorMessageField.text(responseText + text);
+        errorMessageField.text(text);
     }
 
     function setInitialStatesToSearch() {
