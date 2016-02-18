@@ -1,89 +1,86 @@
 $(document).ready(function () {
-    propertyCross.init();
+    propertyCross();
 });
 
-var propertyCross = {
-    countryList: {
-        'UK': {
-            country: 'uk',
-            url: 'http://api.nestoria.co.uk/api',
-            myLocation: 'Wolverhampton'
+var propertyCross = (function () {
+    var countryList         = {
+            'UK': {
+                country: 'uk',
+                url: 'http://api.nestoria.co.uk/api',
+                myLocation: 'Wolverhampton'
+            },
+            'Deutschland': {
+                country: 'de',
+                url: 'http://api.nestoria.de/api',
+                myLocation: 'Köln'
+            },
+            'Italia': {
+                country: 'it',
+                url: 'http://api.nestoria.it/api',
+                myLocation: 'Genova'
+            },
+            'España': {
+                country: 'es',
+                url: 'http://api.nestoria.es/api',
+                myLocation: 'Valencia'
+            },
+            'France': {
+                country: 'fr',
+                url: 'http://api.nestoria.fr/api',
+                myLocation: 'Lion'
+            },
+            'India': {
+                country: 'in',
+                url: 'http://api.nestoria.in/api',
+                myLocation: 'Surat'
+            },
+            'México': {
+                country: 'mx',
+                url: 'http://api.nestoria.mx/api',
+                myLocation: 'León'
+            },
+            'Brasil': {
+                country: 'br',
+                url: 'http://api.nestoria.com.br/api',
+                myLocation: 'Manaus'
+            }
         },
-        'Deutschland': {
-            country: 'de',
-            url: 'http://api.nestoria.de/api',
-            myLocation: 'Köln'
-        },
-        'Italia': {
-            country: 'it',
-            url: 'http://api.nestoria.it/api',
-            myLocation: 'Genova'
-        },
-        'España': {
-            country: 'es',
-            url: 'http://api.nestoria.es/api',
-            myLocation: 'Valencia'
-        },
-        'France': {
-            country: 'fr',
-            url: 'http://api.nestoria.fr/api',
-            myLocation: 'Lion'
-        },
-        'India': {
-            country: 'in',
-            url: 'http://api.nestoria.in/api',
-            myLocation: 'Surat'
-        },
-        'México': {
-            country: 'mx',
-            url: 'http://api.nestoria.mx/api',
-            myLocation: 'León'
-        },
-        'Brasil': {
-            country: 'br',
-            url: 'http://api.nestoria.com.br/api',
-            myLocation: 'Manaus'
-        }
-    },
-    init: function () {
-        this.searchBtn           = $('.btn-send');
-        this.locationBtn         = $('.btn-location');
-        this.page                = 1;
-        this.locationItemsList   = $('.location-items');
-        this.countrySelect       = $('#country-location');
-        this.locationPagination  = $('.location-pagination');
-        this.searchInputField    = $('#search');
-        this.errorHolder         = $('.search-problem');
-        this.errorMessageField   = this.errorHolder.find('.error-message');
-        this.resultHolder        = $('.result-container');
-        this.resultListField     = $('.recent-list');
-        this.locationHolder      = $('.locations');
-        this.locationListField   = $('.location-list');
-        this.overlay             = $('.overlay');
-        this.modalHolder         = $('.modal-holder');
-        this.favouritesModal     = $('#favourites');
-        this.showFavourites      = $('.btn-show-favourites');
-        this.favouritesBtn       = '.btn-favourites';
-        this.removeFavouritesBtn = '.btn-remove';
-        this.itemsPerPage        = 20;
+        body                = $('body'),
+        searchBtn           = $('.btn-send'),
+        locationBtn         = $('.btn-location'),
+        page                = 1,
+        locationItemsList   = $('.location-items'),
+        countrySelect       = $('#country-location'),
+        locationPagination  = $('.location-pagination'),
+        searchInputField    = $('#search'),
+        errorHolder         = $('.search-problem'),
+        errorMessageField   = errorHolder.find('.error-message'),
+        resultHolder        = $('.result-container'),
+        resultListField     = $('.recent-list'),
+        locationHolder      = $('.locations'),
+        locationListField   = $('.location-list'),
+        overlay             = $('.overlay'),
+        modalHolder         = $('.modal-holder'),
+        favouritesModal     = $('#favourites'),
+        showFavourites      = $('.btn-show-favourites'),
+        favouritesBtn       = '.btn-favourites',
+        removeFavouritesBtn = '.btn-remove',
+        itemsPerPage        = 20;
 
-        this.bindEvents();
-    },
-    bindEvents: function () {
-        var self = this;
-        this.searchBtn.on('click', function (e) {
+    function bindEvents() {
+        searchBtn.on('click', function (e) {
             e.preventDefault();
-            this.setInitialStatesToSearch();
-            this.sendSearchData(this.page, this.searchInputField.val());
-        }.bind(this));
+            setInitialStatesToSearch();
+            sendSearchData(page, searchInputField.val());
+        });
 
-        this.locationBtn.on('click', function (e) {
+        locationBtn.on('click', function (e) {
             e.preventDefault();
-            this.setInitialStatesToSearch();
-            this.sendSearchData(this.page, this.countryList[this.countrySelect.val()].myLocation);
-        }.bind(this));
+            setInitialStatesToSearch();
+            sendSearchData(page, countryList[countrySelect.val()].myLocation);
+        });
 
-        $('body').on('click', this.favouritesBtn, function (e) {
+        body.on('click', favouritesBtn, function (e) {
             e.preventDefault();
             var holder = $(this).parents('.location-item'),
                 id     = holder.data('id'),
@@ -94,39 +91,40 @@ var propertyCross = {
 
             $(this).find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
 
-            if (!list.length || !self.hasLocalStorageId(list, id)) {
-                self.addLocalStorageId(list, id, name, img, price);
+            if (!list.length || !hasLocalStorageId(list, id)) {
+                addLocalStorageId(list, id, name, img, price);
             } else {
-                self.removeLocalStorageId(list, id)
+                removeLocalStorageId(list, id)
             }
         });
 
-        this.showFavourites.on('click', function (e) {
+        showFavourites.on('click', function (e) {
             e.preventDefault();
             if (localStorage.favourites && JSON.parse(localStorage.getItem('favourites')).length) {
-                self.createFavouritesList();
+                createFavouritesList();
             } else {
-                self.resetFavouritesList();
+                resetFavouritesList();
             }
         });
 
-        $('body').on('click', this.removeFavouritesBtn, function () {
+        body.on('click', removeFavouritesBtn, function () {
             var parentHolder = $(this).parents('.favourite-item'),
                 id           = parentHolder.data('id'),
                 list         = JSON.parse(localStorage.getItem('favourites')) || [];
-            self.removeLocalStorageId(list, id);
+            removeLocalStorageId(list, id);
             parentHolder.remove();
-            $('[data-id=' + id +']').find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
+            $('[data-id=' + id + ']').find('.glyphicon').toggleClass('glyphicon-heart glyphicon-heart-empty');
 
             if (!JSON.parse(localStorage.getItem('favourites')).length) {
-                self.favouritesModal.find('.close').click();
+                favouritesModal.find('.close').click();
             }
         });
-    },
-    getLocation: function (page, place) {
-        var countryItem = this.countrySelect.val(),
-            country     = this.countryList[countryItem].country,
-            url         = this.countryList[countryItem].url;
+    }
+
+    function getLocation(page, place) {
+        var countryItem = countrySelect.val(),
+            country     = countryList[countryItem].country,
+            url         = countryList[countryItem].url;
 
         return $.ajax({
             method: "GET",
@@ -141,10 +139,10 @@ var propertyCross = {
                 place_name: place
             }
         });
-    },
-    sendSearchData: function (page, place) {
-        var self = this;
-        this.getLocation(page, place)
+    }
+
+    function sendSearchData(page, place) {
+        getLocation(page, place)
             .success(function (response) {
                 var resp             = response.response,
                     statusCode       = parseInt(resp.status_code),
@@ -155,47 +153,48 @@ var propertyCross = {
 
                 if (appRespCode < 200) {
                     locationItemsTotalResults = resp.total_results || 0;
-                    self.createLocationList(locationItemsArr, locationItemsTotalResults)
+                    createLocationList(locationItemsArr, locationItemsTotalResults)
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
-                    self.createSelectLocationList(locationItemsArr, responseText);
+                    createSelectLocationList(locationItemsArr, responseText);
                 }
 
                 if (statusCode >= 300 || appRespCode > 202) {
-                    self.showErrorMessage(responseText);
-                    self.errorHolder.removeClass('hidden');
+                    showErrorMessage(responseText);
+                    errorHolder.removeClass('hidden');
                 }
 
                 console.log(response);
-                self.cleanField(self.searchInputField);
-                self.hideBlock(self.overlay);
+                cleanField(searchInputField);
+                hideBlock(overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
-    },
-    createLocationList: function (locationItemsArr, locationItemsTotalResults) {
+    }
+
+    function createLocationList(locationItemsArr, locationItemsTotalResults) {
         var place        = locationItemsArr[0]['long_title'],
             locationItem = $('<li><span data-name="' + place + '">' + place + ' (' + locationItemsTotalResults + ')</span></li>'),
             equalItems;
 
-        equalItems = this.resultListField.find('li span').filter(function (ind, el) {
+        equalItems = resultListField.find('li span').filter(function (ind, el) {
             return $(el).text().indexOf(locationItemsArr[0]['long_title']) > -1
         });
         if (!equalItems.length) {
-            this.resultListField.prepend(locationItem);
+            resultListField.prepend(locationItem);
             locationItem.on('click', 'span', function () {
-                this.showLocationItems(place);
-            }.bind(this));
+                showLocationItems(place);
+            });
         }
-        this.showBlock(this.resultHolder);
-    },
-    showLocationItems: function (place, page) {
-        var page = page || 1,
-            self = this;
+        showBlock(resultHolder);
+    }
 
-        this.getLocation(page, place)
+    function showLocationItems(place, page) {
+        var page = page || 1;
+
+        getLocation(page, place)
             .success(function (response) {
                 var response = response.response,
                     location;
@@ -203,21 +202,22 @@ var propertyCross = {
                     location = response.locations[0]["long_title"]
                 }
                 console.log(response);
-                self.showBlock(self.overlay);
-                self.removeLocations();
-                self.removePagination();
-                self.addPagination(response.page, response.total_pages, location);
-                self.cleanBlock(self.modalHolder);
-                self.addLocations(response, location);
-                self.showBlock(self.locationItemsList);
-                self.showBlock(self.locationPagination);
-                self.hideBlock(self.overlay);
+                showBlock(overlay);
+                removeLocations();
+                removePagination();
+                addPagination(response.page, response.total_pages, location);
+                cleanBlock(modalHolder);
+                addLocations(response, location);
+                showBlock(locationItemsList);
+                showBlock(locationPagination);
+                hideBlock(overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
-    },
-    addPagination: function (currentPage, totalPages, placeName) {
+    }
+
+    function addPagination(currentPage, totalPages, placeName) {
         var current = parseInt(currentPage),
             paging,
             pagingStructure;
@@ -230,35 +230,36 @@ var propertyCross = {
         }
 
         if (totalPages <= 7) {
-            pagingStructure = this.generatePaginationItems(1, totalPages, current);
-            paging          = this.createPaginationStructure(pagingStructure);
+            pagingStructure = generatePaginationItems(1, totalPages, current);
+            paging          = createPaginationStructure(pagingStructure);
         } else {
             if (current < 5) {
                 pagingStructure = '' +
-                    this.generatePaginationItems(1, 5, current) +
+                    generatePaginationItems(1, 5, current) +
                     '<li class="disabled"><a href="#">...</a></li>' +
                     '<li><a href="#">' + totalPages + '</a></li>';
             } else if (current > parseInt(totalPages) - 5) {
                 pagingStructure = '<li><a href="#">1</a></li>' +
                     '<li class="disabled"><a href="#">...</a></li>' +
-                    this.generatePaginationItems(totalPages - 5, totalPages, current) +
+                    generatePaginationItems(totalPages - 5, totalPages, current) +
                     '';
             } else {
                 pagingStructure = '<li><a href="#">1</a></li>' +
                     '<li class="disabled"><a href="#">...</a></li>' +
-                    this.generatePaginationItems(current - 2, current - 1) +
+                    generatePaginationItems(current - 2, current - 1) +
                     '<li class="active"><a href="#">' + currentPage + '</a></li>' +
-                    this.generatePaginationItems(current + 1, current + 2) +
+                    generatePaginationItems(current + 1, current + 2) +
                     '<li class="disabled"><a href="#">...</a></li>' +
                     '<li><a href="#">' + totalPages + '</a></li>';
             }
         }
 
-        paging = this.createPaginationStructure(pagingStructure);
-        this.addPaginationEvents(paging, placeName);
-        this.locationPagination.html(paging);
-    },
-    createPaginationStructure: function (pagingStructure) {
+        paging = createPaginationStructure(pagingStructure);
+        addPaginationEvents(paging, placeName);
+        locationPagination.html(paging);
+    }
+
+    function createPaginationStructure(pagingStructure) {
         return $('<ul class="pagination">' +
             '<li>' +
             '<a class="prev" href="#" aria-label="Previous">' +
@@ -272,29 +273,30 @@ var propertyCross = {
             '</a>' +
             '</li>' +
             '</ul>')
-    },
-    addPaginationEvents: function (paging, placeName) {
-        var self = this;
+    }
+
+    function addPaginationEvents(paging, placeName) {
         paging.on('click', 'a', function (e) {
             e.preventDefault();
-            var activeNum = parseInt(self.locationPagination.find('.active').find('a').text());
-            var lastNum   = parseInt(self.locationPagination.find('li').eq(-2).find('a').text());
+            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
+            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
             var pageNum   = parseInt($(this).text());
             if ($(this).hasClass('prev') && activeNum !== 1) {
-                self.showLocationItems(placeName, activeNum - 1)
+                showLocationItems(placeName, activeNum - 1)
             }
 
             if ($(this).hasClass('next') && activeNum !== lastNum) {
-                self.showLocationItems(placeName, activeNum + 1)
+                showLocationItems(placeName, activeNum + 1)
             }
 
             if (pageNum > 0) {
-                self.showLocationItems(placeName, pageNum);
+                showLocationItems(placeName, pageNum);
             }
 
         });
-    },
-    generatePaginationItems: function (min, max, current) {
+    }
+
+    function generatePaginationItems(min, max, current) {
         var pagingRepeat = '';
         for (var i = min; i <= max; i++) {
             if (current && current === i) {
@@ -304,19 +306,21 @@ var propertyCross = {
             }
         }
         return pagingRepeat;
-    },
-    removePagination: function () {
-        this.locationPagination.html('');
-    },
-    addLocations: function (response, currentLocation) {
+    }
+
+    function removePagination() {
+        locationPagination.html('');
+    }
+
+    function addLocations(response, currentLocation) {
         var current  = parseInt(response.page),
-            itemsArr = response.listings,
-            self     = this;
+            itemsArr = response.listings;
+
         if (!itemsArr || !itemsArr.length) {
             return;
         }
         itemsArr.forEach(function (el, ind) {
-            var currentInd = (self.itemsPerPage * (current - 1)) + ind + 1,
+            var currentInd = (itemsPerPage * (current - 1)) + ind + 1,
                 storageId  = currentLocation + '-' + currentInd,
                 item;
 
@@ -334,15 +338,16 @@ var propertyCross = {
                 '<p>Keywords: ' + el.keywords + '</p>' +
                 '<p>Updated: ' + el.updated_in_days_formatted + '</p>' +
                 '<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modal-' + currentInd + '">Show Info</button>' +
-                '<button type="button" class="btn btn-sm btn-primary btn-favourites"><i class="glyphicon ' + self.createFavouriteBtnClass(storageId) + '"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-primary btn-favourites"><i class="glyphicon ' + createFavouriteBtnClass(storageId) + '"></i></button>' +
                 '</div>' +
                 '</div>';
 
-            self.locationItemsList.append(item);
-            self.modalHolder.append(self.createModal(el, currentInd));
+            locationItemsList.append(item);
+            modalHolder.append(createModal(el, currentInd));
         });
-    },
-    createFavouriteBtnClass: function (id) {
+    }
+
+    function createFavouriteBtnClass(id) {
         var list      = JSON.parse(localStorage.getItem('favourites')),
             className = 'glyphicon-heart-empty';
         if (list) {
@@ -353,64 +358,73 @@ var propertyCross = {
             });
         }
         return className;
-    },
-    removeLocations: function () {
-        this.locationItemsList.html('');
-    },
-    createSelectLocationList: function (locationItemsArr, responseText) {
-        var self = this;
+    }
+
+    function removeLocations() {
+        locationItemsList.html('');
+    }
+
+    function createSelectLocationList(locationItemsArr, responseText) {
         if (!locationItemsArr.length) {
-            this.showErrorMessage(responseText);
-            this.showBlock(this.errorHolder);
+            showErrorMessage(responseText);
+            showBlock(errorHolder);
             return;
         }
 
         locationItemsArr.forEach(function (el) {
-            this.locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
-        }.bind(this));
+            locationListField.append('<li><span data-name="' + el['place_name'] + '">' + el['long_title'] + '</span></li>');
+        });
 
-        this.locationListField.off('click', 'span', function () {
-            self.getLocationsFromSeveral(this);
+        locationListField.off('click', 'span', function () {
+            getLocationsFromSeveral(this);
         });
-        this.locationListField.on('click', 'span', function () {
-            self.getLocationsFromSeveral(this);
+        locationListField.on('click', 'span', function () {
+            getLocationsFromSeveral(this);
         });
-        this.showBlock(this.locationHolder);
-    },
-    getLocationsFromSeveral: function (elem) {
-        this.searchInputField.val($(elem).data('name'));
-        this.hideBlock(this.locationHolder);
-        this.cleanBlock(this.locationListField);
-        this.searchBtn.click();
-    },
-    cleanField: function ($field) {
+        showBlock(locationHolder);
+    }
+
+    function getLocationsFromSeveral(elem) {
+        searchInputField.val($(elem).data('name'));
+        hideBlock(locationHolder);
+        cleanBlock(locationListField);
+        searchBtn.click();
+    }
+
+    function cleanField($field) {
         $field.val('');
-    },
-    cleanBlock: function ($block) {
+    }
+
+    function cleanBlock($block) {
         $block.html('');
-    },
-    hideBlock: function hideBlock($block) {
+    }
+
+    function hideBlock($block) {
         $block.addClass('hidden');
-    },
-    showBlock: function ($block) {
+    }
+
+    function showBlock($block) {
         $block.removeClass('hidden');
-    },
-    showErrorMessage: function (responseText) {
+    }
+
+    function showErrorMessage(responseText) {
         var text = ' "Empty search field"';
-        if (this.searchInputField.val().length) {
-            text = ' "' + this.searchInputField.val() + '"'
+        if (searchInputField.val().length) {
+            text = ' "' + searchInputField.val() + '"'
         }
-        this.errorMessageField.text(responseText + text);
-    },
-    setInitialStatesToSearch: function () {
-        this.hideBlock(this.errorHolder);
-        this.hideBlock(this.resultHolder);
-        this.hideBlock(this.locationHolder);
-        this.showBlock(this.overlay);
-        this.cleanBlock(this.locationItemsList);
-        this.cleanBlock(this.locationPagination);
-    },
-    createModal: function (itemsData, ind) {
+        errorMessageField.text(responseText + text);
+    }
+
+    function setInitialStatesToSearch() {
+        hideBlock(errorHolder);
+        hideBlock(resultHolder);
+        hideBlock(locationHolder);
+        showBlock(overlay);
+        cleanBlock(locationItemsList);
+        cleanBlock(locationPagination);
+    }
+
+    function createModal(itemsData, ind) {
         return '<div class="modal fade" id="modal-' + ind + '" tabindex="-1" role="dialog" aria-labelledby="modal-label-' + ind + '">' +
             '<div class="modal-dialog" role="document">' +
             '  <div class="modal-content">' +
@@ -423,9 +437,9 @@ var propertyCross = {
             '    <div class="modal-body">' +
             '      <img class="modal-visual" src="' + itemsData.img_url + '" />' +
             '      <ul class="properties">' +
-            '      ' + this.createModalProperty(itemsData.bathroom_number, 'Bathroom') +
-            '      ' + this.createModalProperty(itemsData.bedroom_number, 'Bedroom') +
-            '      ' + this.createModalProperty(itemsData.car_spaces, 'Car space') +
+            '      ' + createModalProperty(itemsData.bathroom_number, 'Bathroom') +
+            '      ' + createModalProperty(itemsData.bedroom_number, 'Bedroom') +
+            '      ' + createModalProperty(itemsData.car_spaces, 'Car space') +
             '      </ul>' +
             '      <p><strong>Summary:</strong> ' + itemsData.summary + '</p>' +
             '      <p><strong>Updated:</strong> ' + itemsData.updated_in_days_formatted + '</p>' +
@@ -436,8 +450,9 @@ var propertyCross = {
             '  </div>' +
             '</div>' +
             '</div>';
-    },
-    createModalProperty: function (prop, propName) {
+    }
+
+    function createModalProperty(prop, propName) {
         var propStr = '';
         if (prop) {
             var count = parseInt(prop);
@@ -449,25 +464,29 @@ var propertyCross = {
                 '</li>';
         }
         return propStr;
-    },
-    hasLocalStorageId: function (list, id) {
+    }
+
+    function hasLocalStorageId(list, id) {
         return list.some(function (el) {
             return el.item.id === id
         });
-    },
-    removeLocalStorageId: function (list, id) {
+    }
+
+    function removeLocalStorageId(list, id) {
         list = list.filter(function (el) {
             return el.item.id !== id
         });
         localStorage.setItem('favourites', JSON.stringify(list));
-    },
-    addLocalStorageId: function (list, id, name, img, price) {
+    }
+
+    function addLocalStorageId(list, id, name, img, price) {
         var currentItemObj = {item: {id: id, name: name, img: img, price: price}};
         list.push(currentItemObj);
         localStorage.setItem('favourites', JSON.stringify(list));
-    },
-    createFavouritesList: function () {
-        var modalBody = this.favouritesModal.find('.modal-body'),
+    }
+
+    function createFavouritesList() {
+        var modalBody = favouritesModal.find('.modal-body'),
             storageArr,
             template  = '';
 
@@ -482,16 +501,19 @@ var propertyCross = {
                 '<img src="' + el.item.img + '" />' +
                 '</div>' +
                 '<div class="media-body">' +
-                '<h3 class="media-heading">' + el.item.name + '</h3>' +
-                '<span class="label label-default">' + el.item.price + '</span>' +
-                '<span class="glyphicon glyphicon-remove btn-remove"></span>' +
+                '<h4 class="media-heading">' + el.item.name + '</h4>' +
+                '<span class="label label-info">' + el.item.price + '</span>' +
+                '<span class="glyphicon glyphicon-remove btn-remove text-danger"></span>' +
                 '</div>' +
                 '</div>';
         });
         modalBody.html('<div class="favourites-list">' + template + '</div>');
-    },
-    resetFavouritesList: function () {
-        var modalBody = this.favouritesModal.find('.modal-body');
+    }
+
+    function resetFavouritesList() {
+        var modalBody = favouritesModal.find('.modal-body');
         modalBody.html('<p>You have not added any properties to your favourites</p>');
     }
-};
+
+    bindEvents();
+});
