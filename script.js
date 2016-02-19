@@ -195,9 +195,9 @@ var propertyCross = (function () {
                     totalResults = resp.total_results || 0;
                     place        = locationItemsArr[0]['place_name'];
                     if (recentLocations.indexOf(place) === -1) {
-                        recentLocations.push(place);
+                        recentLocations.push({place: place, total: totalResults});
                     }
-                    createLocationList(place, totalResults)
+                    createLocationList(place)
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
@@ -223,11 +223,11 @@ var propertyCross = (function () {
             });
     }
 
-    function createLocationList(place, locationItemsTotalResults) {
+    function createLocationList(place) {
         var locationList;
 
         locationList = recentLocations.reduceRight(function (list, el) {
-            return list += '<li><span data-name="' + el + '">' + el + ' (' + locationItemsTotalResults + ')</span></li>'
+            return list += '<li><span data-name="' + el.place + '">' + el.place + ' (' + el.total + ')</span></li>'
         }, '');
 
         locationList = $(locationList);
