@@ -247,7 +247,7 @@ var propertyCross = (function () {
                 }
                 console.log(response);
                 removeLocations();
-                pagination(response.page, response.total_pages, location, showLocationItems);
+                pagination(parseInt(response.page), response.total_pages, location, showLocationItems);
                 cleanBlock(modalHolder);
                 addLocations(response, location);
                 showBlock(locationItemsList);
@@ -470,10 +470,9 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
 
     locationPagination.html('');
     locationPagination.removeClass('hidden');
-    addPagination(currentPage, totalPages, placeName);
+
     function addPagination(currentPage, totalPages, placeName) {
-        var current = parseInt(currentPage),
-            paging,
+        var paging,
             pagingStructure;
 
         if (!totalPages) {
@@ -484,25 +483,25 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
         }
 
         if (totalPages <= 7) {
-            pagingStructure = generatePaginationItems(1, totalPages, current);
+            pagingStructure = generatePaginationItems(1, totalPages, currentPage);
             paging          = createPaginationStructure(pagingStructure);
         } else {
-            if (current < 5) {
+            if (currentPage < 5) {
                 pagingStructure = '' +
-                    generatePaginationItems(1, 5, current) +
+                    generatePaginationItems(1, 5, currentPage) +
                     '<li class="disabled"><a href="#">...</a></li>' +
                     '<li><a href="#">' + totalPages + '</a></li>';
-            } else if (current > parseInt(totalPages) - 5) {
+            } else if (currentPage > parseInt(totalPages) - 5) {
                 pagingStructure = '<li><a href="#">1</a></li>' +
                     '<li class="disabled"><a href="#">...</a></li>' +
-                    generatePaginationItems(totalPages - 5, totalPages, current) +
+                    generatePaginationItems(totalPages - 5, totalPages, currentPage) +
                     '';
             } else {
                 pagingStructure = '<li><a href="#">1</a></li>' +
                     '<li class="disabled"><a href="#">...</a></li>' +
-                    generatePaginationItems(current - 2, current - 1) +
+                    generatePaginationItems(currentPage - 2, currentPage - 1) +
                     '<li class="active"><a href="#">' + currentPage + '</a></li>' +
-                    generatePaginationItems(current + 1, current + 2) +
+                    generatePaginationItems(currentPage + 1, currentPage + 2) +
                     '<li class="disabled"><a href="#">...</a></li>' +
                     '<li><a href="#">' + totalPages + '</a></li>';
             }
@@ -532,21 +531,19 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
     function addPaginationEvents(paging, placeName) {
         paging.on('click', 'a', function (e) {
             e.preventDefault();
-            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
-            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
             var pageNum   = parseInt($(this).text());
 
-            if (($(this).hasClass('prev') && activeNum === 1) || ($(this).hasClass('next') && activeNum === lastNum)) {
+            if (($(this).hasClass('prev') && currentPage === 1) || ($(this).hasClass('next') && currentPage === totalPages)) {
                 return;
             }
             $('.overlay').removeClass('hidden');
 
-            if ($(this).hasClass('prev') && activeNum !== 1) {
-                showLocationItems(placeName, activeNum - 1)
+            if ($(this).hasClass('prev') && currentPage !== 1) {
+                showLocationItems(placeName, currentPage - 1)
             }
 
-            if ($(this).hasClass('next') && activeNum !== lastNum) {
-                showLocationItems(placeName, activeNum + 1)
+            if ($(this).hasClass('next') && currentPage !== totalPages) {
+                showLocationItems(placeName, currentPage + 1)
             }
 
             if (pageNum > 0) {
@@ -566,4 +563,6 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
         }
         return pagingRepeat;
     }
+
+    addPagination(currentPage, totalPages, placeName);
 }
