@@ -545,7 +545,7 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
             e.preventDefault();
             var pageNum = parseInt($(this).text());
 
-            if (($(this).hasClass('prev') && currentPage === 1) || ($(this).hasClass('next') && currentPage === totalPages)) {
+            if (($(this).hasClass('prev') && currentPage === 1) || ($(this).hasClass('next') && currentPage === 50)) {
                 return;
             }
             $('.overlay').removeClass('hidden');
