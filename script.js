@@ -197,7 +197,7 @@ var propertyCross = (function () {
                     if (recentLocations.indexOf(place) === -1) {
                         recentLocations.push({place: place, total: totalResults});
                     }
-                    createLocationList(place)
+                    createLocationList();
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
@@ -210,7 +210,7 @@ var propertyCross = (function () {
                 }
 
                 if (statusCode >= 300 || appRespCode > 210) {
-                    showErrorMessage();
+                    showErrorMessage(responseText);
                     errorHolder.removeClass('hidden');
                 }
 
@@ -223,7 +223,7 @@ var propertyCross = (function () {
             });
     }
 
-    function createLocationList(place) {
+    function createLocationList() {
         var locationList;
 
         locationList = recentLocations.reduceRight(function (list, el) {
@@ -315,9 +315,9 @@ var propertyCross = (function () {
         locationItemsList.html('');
     }
 
-    function createSelectLocationList(locationItemsArr) {
+    function createSelectLocationList(locationItemsArr, responseText) {
         if (!locationItemsArr.length) {
-            showErrorMessage();
+            showErrorMessage(responseText);
             showBlock(errorHolder);
             return;
         }
@@ -359,11 +359,11 @@ var propertyCross = (function () {
     }
 
     function showErrorMessage(messageText) {
-        var text = 'Please type correct city or zip code';
+        var text = '';
         if (messageText) {
             text = messageText;
         }
-
+        text += '. Please type correct city or zip code.';
         errorMessageField.text(text);
     }
 
