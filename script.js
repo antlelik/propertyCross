@@ -65,6 +65,7 @@ var propertyCross = (function () {
         showFavourites      = $('.btn-show-favourites'),
         favouritesBtn       = '.btn-favourites',
         removeFavouritesBtn = '.btn-remove',
+        recentLocations     = [],
         itemsPerPage        = 20;
 
     function bindEvents() {
@@ -186,12 +187,17 @@ var propertyCross = (function () {
                     statusCode       = parseInt(resp.status_code),
                     appRespCode      = parseInt(resp.application_response_code),
                     locationItemsArr = resp.locations || [],
-                    locationItemsTotalResults,
-                    responseText     = resp.application_response_text;
+                    responseText     = resp.application_response_text,
+                    totalResults,
+                    place;
 
                 if (appRespCode < 200) {
-                    locationItemsTotalResults = resp.total_results || 0;
-                    createLocationList(locationItemsArr, locationItemsTotalResults)
+                    totalResults = resp.total_results || 0;
+                    place        = locationItemsArr[0]['place_name'];
+                    if (recentLocations.indexOf(place) === -1) {
+                        recentLocations.push(place);
+                    }
+                    createLocationList(place, totalResults)
                 }
 
                 if (statusCode >= 200 && (appRespCode >= 200 && appRespCode <= 202)) {
@@ -217,21 +223,20 @@ var propertyCross = (function () {
             });
     }
 
-    function createLocationList(locationItemsArr, locationItemsTotalResults) {
-        var place        = locationItemsArr[0]['place_name'],
-            locationItem = $('<li><span data-name="' + place + '">' + place + ' (' + locationItemsTotalResults + ')</span></li>'),
-            equalItems;
+    function createLocationList(place, locationItemsTotalResults) {
+        var locationList;
 
-        equalItems = resultListField.find('li span').filter(function (ind, el) {
-            return $(el).text().indexOf(locationItemsArr[0]['place_name']) > -1
+        locationList = recentLocations.reverse().reduce(function (list, el) {
+            return list += '<li><span data-name="' + el + '">' + el + ' (' + locationItemsTotalResults + ')</span></li>'
+        }, '');
+
+        locationList = $(locationList);
+        locationList.on('click', 'span', function () {
+            showBlock(overlay);
+            showLocationItems(place);
         });
-        if (!equalItems.length) {
-            resultListField.prepend(locationItem);
-            locationItem.on('click', 'span', function () {
-                showBlock(overlay);
-                showLocationItems(place);
-            });
-        }
+
+        resultListField.html(locationList);
         showBlock(resultHolder);
     }
 
@@ -379,7 +384,7 @@ var propertyCross = (function () {
             '      <button type="button" class="close" data-dismiss="modal" data-backdrop="false" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
             '      <h3 class="modal-title" id="modal-label-' + ind + '">' + itemsData.title + '</h3>' +
             '      <h4><span class="price label label-primary">' + itemsData.price_formatted + '</span></h4>' +
-            '      <span class="property-type glyphicon glyphicon-home" aria-hidden="true"> ' + itemsData.property_type + '</span>' +
+            '      ' + showPropertyType(itemsData.property_type) +
             '    </div>' +
             '    <div class="modal-body">' +
             '      <img class="modal-visual" src="' + itemsData.img_url + '" />' +
@@ -397,6 +402,13 @@ var propertyCross = (function () {
             '  </div>' +
             '</div>' +
             '</div>';
+    }
+
+    function showPropertyType(property) {
+        if (property) {
+            return  '<span class="property-type glyphicon glyphicon-home" aria-hidden="true"> ' + property + '</span>'
+        }
+        return '';
     }
 
     function createModalProperty(prop, propName) {
@@ -466,7 +478,7 @@ var propertyCross = (function () {
 });
 
 function pagination(currentPage, totalPages, placeName, showLocationItems) {
-    var locationPagination  = $('.location-pagination');
+    var locationPagination = $('.location-pagination');
 
     locationPagination.html('');
     locationPagination.removeClass('hidden');
@@ -531,7 +543,7 @@ function pagination(currentPage, totalPages, placeName, showLocationItems) {
     function addPaginationEvents(paging, placeName) {
         paging.on('click', 'a', function (e) {
             e.preventDefault();
-            var pageNum   = parseInt($(this).text());
+            var pageNum = parseInt($(this).text());
 
             if (($(this).hasClass('prev') && currentPage === 1) || ($(this).hasClass('next') && currentPage === totalPages)) {
                 return;
