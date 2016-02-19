@@ -226,7 +226,7 @@ var propertyCross = (function () {
     function createLocationList(place, locationItemsTotalResults) {
         var locationList;
 
-        locationList = recentLocations.reverse().reduce(function (list, el) {
+        locationList = recentLocations.reduceRight(function (list, el) {
             return list += '<li><span data-name="' + el + '">' + el + ' (' + locationItemsTotalResults + ')</span></li>'
         }, '');
 
