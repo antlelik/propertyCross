@@ -247,112 +247,15 @@ var propertyCross = (function () {
                 }
                 console.log(response);
                 removeLocations();
-                removePagination();
-                addPagination(response.page, response.total_pages, location);
+                pagination(response.page, response.total_pages, location, showLocationItems);
                 cleanBlock(modalHolder);
                 addLocations(response, location);
                 showBlock(locationItemsList);
-                showBlock(locationPagination);
                 hideBlock(overlay);
             })
             .fail(function (error) {
                 console.log(error);
             });
-    }
-
-    function addPagination(currentPage, totalPages, placeName) {
-        var current = parseInt(currentPage),
-            paging,
-            pagingStructure;
-
-        if (!totalPages) {
-            return;
-        }
-        if (totalPages > 50) {
-            totalPages = 50;
-        }
-
-        if (totalPages <= 7) {
-            pagingStructure = generatePaginationItems(1, totalPages, current);
-            paging          = createPaginationStructure(pagingStructure);
-        } else {
-            if (current < 5) {
-                pagingStructure = '' +
-                    generatePaginationItems(1, 5, current) +
-                    '<li class="disabled"><a href="#">...</a></li>' +
-                    '<li><a href="#">' + totalPages + '</a></li>';
-            } else if (current > parseInt(totalPages) - 5) {
-                pagingStructure = '<li><a href="#">1</a></li>' +
-                    '<li class="disabled"><a href="#">...</a></li>' +
-                    generatePaginationItems(totalPages - 5, totalPages, current) +
-                    '';
-            } else {
-                pagingStructure = '<li><a href="#">1</a></li>' +
-                    '<li class="disabled"><a href="#">...</a></li>' +
-                    generatePaginationItems(current - 2, current - 1) +
-                    '<li class="active"><a href="#">' + currentPage + '</a></li>' +
-                    generatePaginationItems(current + 1, current + 2) +
-                    '<li class="disabled"><a href="#">...</a></li>' +
-                    '<li><a href="#">' + totalPages + '</a></li>';
-            }
-        }
-
-        paging = createPaginationStructure(pagingStructure);
-        addPaginationEvents(paging, placeName);
-        locationPagination.html(paging);
-    }
-
-    function createPaginationStructure(pagingStructure) {
-        return $('<ul class="pagination">' +
-            '<li>' +
-            '<a class="prev" href="#" aria-label="Previous">' +
-            '<span aria-hidden="true">&laquo;</span>' +
-            '</a>' +
-            '</li>' +
-            pagingStructure +
-            '<li>' +
-            '<a class="next" href="#" aria-label="Next">' +
-            '<span aria-hidden="true">&raquo;</span>' +
-            '</a>' +
-            '</li>' +
-            '</ul>')
-    }
-
-    function addPaginationEvents(paging, placeName) {
-        paging.on('click', 'a', function (e) {
-            e.preventDefault();
-            showBlock(overlay);
-            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
-            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
-            var pageNum   = parseInt($(this).text());
-            if ($(this).hasClass('prev') && activeNum !== 1) {
-                showLocationItems(placeName, activeNum - 1)
-            }
-
-            if ($(this).hasClass('next') && activeNum !== lastNum) {
-                showLocationItems(placeName, activeNum + 1)
-            }
-
-            if (pageNum > 0) {
-                showLocationItems(placeName, pageNum);
-            }
-        });
-    }
-
-    function generatePaginationItems(min, max, current) {
-        var pagingRepeat = '';
-        for (var i = min; i <= max; i++) {
-            if (current && current === i) {
-                pagingRepeat += '<li class="active"><a href="#">' + i + '</a></li>'
-            } else {
-                pagingRepeat += '<li><a href="#">' + i + '</a></li>'
-            }
-        }
-        return pagingRepeat;
-    }
-
-    function removePagination() {
-        locationPagination.html('');
     }
 
     function addLocations(response, currentLocation) {
@@ -561,3 +464,106 @@ var propertyCross = (function () {
 
     bindEvents();
 });
+
+function pagination(currentPage, totalPages, placeName, showLocationItems) {
+    var locationPagination  = $('.location-pagination');
+
+    locationPagination.html('');
+    locationPagination.removeClass('hidden');
+    addPagination(currentPage, totalPages, placeName);
+    function addPagination(currentPage, totalPages, placeName) {
+        var current = parseInt(currentPage),
+            paging,
+            pagingStructure;
+
+        if (!totalPages) {
+            return;
+        }
+        if (totalPages > 50) {
+            totalPages = 50;
+        }
+
+        if (totalPages <= 7) {
+            pagingStructure = generatePaginationItems(1, totalPages, current);
+            paging          = createPaginationStructure(pagingStructure);
+        } else {
+            if (current < 5) {
+                pagingStructure = '' +
+                    generatePaginationItems(1, 5, current) +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    '<li><a href="#">' + totalPages + '</a></li>';
+            } else if (current > parseInt(totalPages) - 5) {
+                pagingStructure = '<li><a href="#">1</a></li>' +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    generatePaginationItems(totalPages - 5, totalPages, current) +
+                    '';
+            } else {
+                pagingStructure = '<li><a href="#">1</a></li>' +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    generatePaginationItems(current - 2, current - 1) +
+                    '<li class="active"><a href="#">' + currentPage + '</a></li>' +
+                    generatePaginationItems(current + 1, current + 2) +
+                    '<li class="disabled"><a href="#">...</a></li>' +
+                    '<li><a href="#">' + totalPages + '</a></li>';
+            }
+        }
+
+        paging = createPaginationStructure(pagingStructure);
+        addPaginationEvents(paging, placeName);
+        locationPagination.html(paging);
+    }
+
+    function createPaginationStructure(pagingStructure) {
+        return $('<ul class="pagination">' +
+            '<li>' +
+            '<a class="prev" href="#" aria-label="Previous">' +
+            '<span aria-hidden="true">&laquo;</span>' +
+            '</a>' +
+            '</li>' +
+            pagingStructure +
+            '<li>' +
+            '<a class="next" href="#" aria-label="Next">' +
+            '<span aria-hidden="true">&raquo;</span>' +
+            '</a>' +
+            '</li>' +
+            '</ul>')
+    }
+
+    function addPaginationEvents(paging, placeName) {
+        paging.on('click', 'a', function (e) {
+            e.preventDefault();
+            var activeNum = parseInt(locationPagination.find('.active').find('a').text());
+            var lastNum   = parseInt(locationPagination.find('li').eq(-2).find('a').text());
+            var pageNum   = parseInt($(this).text());
+
+            if (($(this).hasClass('prev') && activeNum === 1) || ($(this).hasClass('next') && activeNum === lastNum)) {
+                return;
+            }
+            $('.overlay').removeClass('hidden');
+
+            if ($(this).hasClass('prev') && activeNum !== 1) {
+                showLocationItems(placeName, activeNum - 1)
+            }
+
+            if ($(this).hasClass('next') && activeNum !== lastNum) {
+                showLocationItems(placeName, activeNum + 1)
+            }
+
+            if (pageNum > 0) {
+                showLocationItems(placeName, pageNum);
+            }
+        });
+    }
+
+    function generatePaginationItems(min, max, current) {
+        var pagingRepeat = '';
+        for (var i = min; i <= max; i++) {
+            if (current && current === i) {
+                pagingRepeat += '<li class="active"><a href="#">' + i + '</a></li>'
+            } else {
+                pagingRepeat += '<li><a href="#">' + i + '</a></li>'
+            }
+        }
+        return pagingRepeat;
+    }
+}
