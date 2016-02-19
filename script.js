@@ -233,7 +233,7 @@ var propertyCross = (function () {
         locationList = $(locationList);
         locationList.on('click', 'span', function () {
             showBlock(overlay);
-            showLocationItems(place);
+            showLocationItems($(this).data('name'));
         });
 
         resultListField.html(locationList);
