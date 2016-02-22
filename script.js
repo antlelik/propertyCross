@@ -132,6 +132,7 @@ var propertyCross = (function () {
         }
 
         function errorFunction() {
+            hideBlock(overlay);
             errorMessageField.text('Couldn\'t get your current position');
         }
     }
