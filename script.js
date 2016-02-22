@@ -153,7 +153,8 @@ var propertyCross = (function () {
                 listing_type: 'buy',
                 page: page,
                 place_name: place
-            }
+            },
+            dataType: 'jsonp'
         });
     }
 
