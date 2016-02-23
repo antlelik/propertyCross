@@ -6,43 +6,35 @@ var propertyCross = (function () {
     var countryList         = {
             'UK': {
                 country: 'uk',
-                url: 'http://api.nestoria.co.uk/api',
-                myLocation: 'Wolverhampton'
+                url: 'http://api.nestoria.co.uk/api'
             },
             'Deutschland': {
                 country: 'de',
-                url: 'http://api.nestoria.de/api',
-                myLocation: 'Köln'
+                url: 'http://api.nestoria.de/api'
             },
             'Italia': {
                 country: 'it',
-                url: 'http://api.nestoria.it/api',
-                myLocation: 'Genova'
+                url: 'http://api.nestoria.it/api'
             },
             'España': {
                 country: 'es',
-                url: 'http://api.nestoria.es/api',
-                myLocation: 'Valencia'
+                url: 'http://api.nestoria.es/api'
             },
             'France': {
                 country: 'fr',
-                url: 'http://api.nestoria.fr/api',
-                myLocation: 'Lion'
+                url: 'http://api.nestoria.fr/api'
             },
             'India': {
                 country: 'in',
-                url: 'http://api.nestoria.in/api',
-                myLocation: 'Surat'
+                url: 'http://api.nestoria.in/api'
             },
             'México': {
                 country: 'mx',
-                url: 'http://api.nestoria.mx/api',
-                myLocation: 'León'
+                url: 'http://api.nestoria.mx/api'
             },
             'Brasil': {
                 country: 'br',
-                url: 'http://api.nestoria.com.br/api',
-                myLocation: 'Manaus'
+                url: 'http://api.nestoria.com.br/api'
             }
         },
         body                = $('body'),
